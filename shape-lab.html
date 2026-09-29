@@ -1,0 +1,1472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shape Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lexend:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F8FB; --grid:#CFE0E9; --ink:#14233B; --ink-soft:#4B5D76;
+  --blue:#2B59FF; --blue-soft:#DDE6FF;
+  --pink:#E8388A; --pink-soft:#FFE1EF;
+  --sun:#FFC533; --sun-soft:#FFF1C4;
+  --mint:#12905F; --mint-soft:#D5F4E6;
+  --white:#fff;
+  --shadow:4px 4px 0 var(--ink);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:12px}
+body{
+  margin:0; font-family:'Lexend',system-ui,-apple-system,'Segoe UI',sans-serif; font-size:17px; line-height:1.5; color:var(--ink);
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+h1,h2,h3,.btn,.tab,.seg button,.tool{font-family:'Fredoka','Lexend',system-ui,sans-serif}
+h1{font-size:2.1rem; line-height:1.1; margin:0; font-weight:700}
+h2{font-size:1.45rem; margin:0 0 6px; font-weight:600}
+h3{font-size:1.15rem; margin:14px 0 6px; font-weight:600}
+p{margin:0 0 10px}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+.skip{position:absolute; left:-999px; top:8px; background:var(--sun); padding:8px 14px; border:2px solid var(--ink); border-radius:999px; z-index:10}
+.skip:focus{left:12px}
+:focus-visible{outline:3px solid var(--ink); outline-offset:3px; box-shadow:0 0 0 6px var(--sun)}
+
+.top{max-width:1180px; margin:0 auto; padding:18px 20px 8px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap}
+.brand{display:flex; align-items:center; gap:14px}
+.logo{width:74px; height:auto}
+.sub{margin:2px 0 0; color:var(--ink-soft); font-size:.98rem}
+.seg{display:inline-flex; border:2px solid var(--ink); border-radius:999px; overflow:hidden; background:#fff; flex-wrap:wrap}
+.seg button{border:0; background:transparent; padding:.45rem 1rem; font-size:1rem; font-weight:600; cursor:pointer; color:var(--ink)}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--sun)}
+
+.who{max-width:1180px; margin:0 auto; padding:0 20px 8px; display:flex; gap:10px 18px; flex-wrap:wrap}
+.who label{display:flex; align-items:center; gap:8px; font-weight:600}
+.who input{font:inherit; border:2px solid var(--ink); border-radius:10px; padding:5px 10px; background:#fff; color:var(--ink); width:min(230px,42vw)}
+.who input#gPeriod{width:90px}
+.tabs{max-width:1180px; margin:6px auto 0; padding:0 20px; display:flex; gap:10px; flex-wrap:wrap}
+.tab{border:2px solid var(--ink); background:#fff; border-radius:12px 12px 0 0; padding:.6rem 1.1rem; font-size:1.05rem; font-weight:600; cursor:pointer; color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--sun); transform:translateY(2px); padding-bottom:calc(.6rem + 2px)}
+main{max-width:1180px; margin:0 auto; padding:0 20px 24px; border-top:0}
+.station{padding-top:16px}
+
+.lab{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr); gap:20px; align-items:start}
+@media (max-width:920px){ .lab{grid-template-columns:1fr} h1{font-size:1.7rem} }
+.side{display:grid; gap:18px}
+.panel{background:#fff; border:2px solid var(--ink); border-radius:16px; box-shadow:var(--shadow); padding:16px 18px}
+.stage{padding:14px}
+canvas{display:block; width:100%; background:#fff; border:2px solid var(--ink); border-radius:8px; touch-action:none}
+#labCanvas{aspect-ratio:1/1; cursor:grab}
+#twinCanvas{aspect-ratio:4/3}
+.row{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
+.btn{border:2px solid var(--ink); background:#fff; border-radius:999px; padding:.5rem 1.1rem; font-size:1.02rem; font-weight:600; cursor:pointer; box-shadow:2px 2px 0 var(--ink); color:var(--ink); transition:transform .08s, box-shadow .08s}
+.btn:hover{transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px); box-shadow:0 0 0 var(--ink)}
+.btn:disabled{opacity:.45; cursor:not-allowed; transform:none; box-shadow:2px 2px 0 var(--ink)}
+.btn.primary{background:var(--blue); color:#fff}
+.btn.good{background:var(--mint); color:#fff}
+.btn[aria-pressed="true"]{background:var(--sun)}
+.lbl{font-weight:600; display:block; margin:0 0 6px}
+.hint{color:var(--ink-soft); font-size:.92rem; margin:4px 0 0}
+.es{font-style:italic}
+
+.ctl{margin:12px 0}
+.ctl label{display:flex; justify-content:space-between; font-weight:600; margin-bottom:2px}
+.ctl output{font-family:'Fredoka',sans-serif; font-size:1.1rem; color:var(--blue)}
+input[type=range]{width:100%; accent-color:var(--blue); height:28px}
+.check{display:flex; gap:10px; align-items:flex-start; margin:10px 0 4px}
+.check input{width:22px; height:22px; margin-top:2px; accent-color:var(--blue)}
+
+.tools{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:8px}
+.tool{border:2px solid var(--ink); background:#fff; border-radius:12px; padding:.55rem .3rem; cursor:pointer; text-align:center; color:var(--ink); display:flex; flex-direction:column; line-height:1.15}
+.tool b{font-size:1.1rem; font-weight:600}
+.tool small{font-family:'Lexend',sans-serif; font-size:.74rem; color:var(--ink-soft)}
+.tool[aria-pressed="true"]{background:var(--blue); color:#fff}
+.tool[aria-pressed="true"] small{color:#dfe7ff}
+@media (max-width:420px){ .tools{grid-template-columns:repeat(2,1fr)} }
+.mirrors{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.mirrors .btn{text-align:center; padding:.45rem .5rem}
+
+table{width:100%; border-collapse:collapse; font-size:.95rem}
+th,td{padding:5px 8px; text-align:left; border-bottom:1.5px solid var(--grid)}
+th{font-weight:600}
+td.num,th.num{text-align:right; font-variant-numeric:tabular-nums}
+.tag-blue{color:var(--blue); font-weight:600}
+.tag-pink{color:var(--pink); font-weight:600}
+
+.verdict{transition:background .2s}
+.verdict .big{font-family:'Fredoka',sans-serif; font-size:1.9rem; font-weight:700; line-height:1.1; margin:0 0 4px}
+.v-congruent{background:var(--mint-soft)}
+.v-similar{background:var(--sun-soft)}
+.v-not{background:var(--pink-soft)}
+
+.goals{list-style:none; padding:0; margin:8px 0 0; display:grid; gap:8px}
+.goals li, .checklist li{display:flex; gap:10px; align-items:flex-start}
+.checklist{list-style:none; padding:0; margin:8px 0 0; display:grid; gap:9px}
+.ico{flex:none; width:26px; height:26px; border:2px solid var(--ink); border-radius:50%; background:#fff; display:grid; place-items:center}
+.done .ico{background:var(--mint); border-color:var(--mint)}
+.ico svg{width:16px; height:16px; opacity:0}
+.done .ico svg{opacity:1}
+
+.rule{background:var(--blue-soft); border:2px solid var(--ink); border-radius:12px; padding:10px 12px; margin:8px 0}
+.rule .alg{font-family:'Fredoka',sans-serif; font-size:1.25rem; font-weight:600}
+.status{margin:8px 0 0; font-weight:500}
+.ok-msg{color:var(--mint); font-weight:600}
+.bad-msg{color:var(--pink); font-weight:600}
+
+.chips{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0}
+.chip{border:2px solid var(--ink); border-radius:999px; min-width:38px; height:38px; padding:0 12px; background:#fff; font-family:'Fredoka',sans-serif; font-weight:600; cursor:pointer; color:var(--ink)}
+.chip[aria-current="true"]{background:var(--sun)}
+.chip.done{background:var(--mint); color:#fff; border-color:var(--ink)}
+
+/* sort */
+.pair{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:12px 0}
+.fig{border:2px solid var(--ink); border-radius:12px; background:#fff; padding:6px}
+.fig svg{display:block; width:100%; height:auto}
+.answers{display:flex; gap:10px; flex-wrap:wrap}
+.answers .btn{font-size:1.15rem; padding:.6rem 1.4rem}
+.answers .btn.wrong{background:var(--pink-soft)}
+.answers .btn.right{background:var(--mint); color:#fff}
+.meter{height:12px; border:2px solid var(--ink); border-radius:999px; background:#fff; overflow:hidden; margin:6px 0 2px}
+.meter i{display:block; height:100%; background:var(--blue)}
+@media (max-width:560px){ .pair{grid-template-columns:1fr} }
+
+/* recap */
+.ideas{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-top:10px}
+.idea{border:2px solid var(--ink); border-radius:14px; padding:12px 14px; background:#fff}
+.idea:nth-child(1){border-top:10px solid var(--blue)}
+.idea:nth-child(2){border-top:10px solid var(--pink)}
+.idea:nth-child(3){border-top:10px solid var(--sun)}
+.idea:nth-child(4){border-top:10px solid var(--mint)}
+.idea svg{width:100%; height:auto; background:var(--paper); border-radius:8px; margin-bottom:6px}
+.idea h3{margin:4px 0 2px}
+.idea dl{margin:0; font-size:.93rem}
+.idea dt{font-weight:600; margin-top:6px}
+.idea dd{margin:0}
+.snaps{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px; margin-top:8px}
+.snap{border:2px solid var(--ink); border-radius:12px; padding:8px; background:#fff}
+.snap img{width:100%; display:block; border-radius:6px; border:1.5px solid var(--grid)}
+.snap input{width:100%; margin-top:6px; font:inherit; font-size:.9rem; padding:6px 8px; border:2px solid var(--ink); border-radius:8px}
+.snap button{margin-top:6px; font-size:.85rem; padding:.25rem .8rem}
+.wrap{display:grid; gap:18px; margin-top:16px}
+.frame{margin:12px 0 2px; font-size:1.05rem}
+.frame input[type=text], .frame textarea, .frame select, .name input, textarea.free{font:inherit; border:2px solid var(--ink); border-radius:10px; padding:7px 10px; background:#fff; color:var(--ink)}
+.frame input[type=text]{width:100%; margin-top:4px}
+.frame textarea, textarea.free{width:100%; margin-top:4px; resize:vertical}
+.frame select{margin:0 6px; min-width:140px}
+.frame select.ok{background:var(--mint-soft); border-color:var(--mint)}
+.frame select.bad{background:var(--pink-soft); border-color:var(--pink)}
+.name{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:6px 0 12px}
+.name input{width:min(320px,100%)}
+.vocab{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0}
+.vocab span{border:2px solid var(--grid); color:var(--ink-soft); border-radius:999px; padding:1px 10px; font-size:.9rem}
+.vocab span.on{border-color:var(--mint); background:var(--mint-soft); color:var(--ink); font-weight:600}
+.bank{display:flex; flex-wrap:wrap; gap:8px; margin:8px 0}
+.bank span{background:var(--sun-soft); border:2px solid var(--ink); border-radius:10px; padding:2px 10px; font-size:.95rem}
+.bank small{color:var(--ink-soft)}
+
+.wall{max-width:1180px; margin:0 auto 40px; padding:0 20px}
+.wall summary{cursor:pointer; font-family:'Fredoka',sans-serif; font-size:1.25rem; font-weight:600; padding:12px 18px; background:#fff; border:2px solid var(--ink); border-radius:14px; box-shadow:var(--shadow); list-style:none}
+.wall summary::-webkit-details-marker{display:none}
+.wall[open] summary{border-radius:14px 14px 0 0; box-shadow:none}
+.wall .body{background:#fff; border:2px solid var(--ink); border-top:0; border-radius:0 0 14px 14px; padding:8px 18px 16px; box-shadow:var(--shadow)}
+.wall dl{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:4px 26px; margin:0}
+.wall dt{font-weight:600; margin-top:10px}
+.wall dt em{font-weight:400; color:var(--pink)}
+.wall dd{margin:0; font-size:.93rem}
+
+#toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 18px; border-radius:999px; font-weight:500; opacity:0; pointer-events:none; transition:opacity .2s; z-index:20; max-width:90vw}
+#toast.show{opacity:1}
+
+#printSheet{display:none}
+@media print{
+  body{background:#fff; font-size:12pt}
+  body>*:not(#printSheet){display:none!important}
+  #printSheet{display:block!important}
+  #printSheet h1{font-size:20pt}
+  #printSheet .ps-snaps{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0}
+  #printSheet .ps-snaps img{width:100%; border:1px solid #999}
+  #printSheet p{white-space:pre-wrap}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+</style>
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+<header class="top">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 68 44" aria-hidden="true">
+      <polygon points="4,40 31,40 4,6" fill="#DDE6FF" stroke="#2B59FF" stroke-width="3" stroke-linejoin="round"/>
+      <polygon points="64,40 37,40 64,6" fill="#FFE1EF" stroke="#E8388A" stroke-width="3" stroke-linejoin="round"/>
+      <line x1="34" y1="2" x2="34" y2="42" stroke="#14233B" stroke-width="2" stroke-dasharray="3 3"/>
+    </svg>
+    <div>
+      <h1 data-i18n="app.title">Shape Lab</h1>
+      <p class="sub" data-i18n="app.sub"></p>
+    </div>
+  </div>
+  <div class="seg" role="group" aria-label="Language / Idioma" id="langSeg">
+    <button type="button" data-lang="en" aria-pressed="true">English</button>
+    <button type="button" data-lang="es" aria-pressed="false">Español</button>
+  </div>
+</header>
+
+<div class="who">
+  <label><span data-i18n="who.name"></span><input type="text" id="gName" autocomplete="off"></label>
+  <label><span data-i18n="who.period"></span><input type="text" id="gPeriod" autocomplete="off" inputmode="numeric" maxlength="6"></label>
+</div>
+
+<nav class="tabs" role="tablist" id="tabs">
+  <button class="tab" role="tab" id="t-twins" aria-controls="tab-twins" aria-selected="true" data-tab="twins" data-i18n="tab.twins"></button>
+  <button class="tab" role="tab" id="t-move" aria-controls="tab-move" aria-selected="false" tabindex="-1" data-tab="move" data-i18n="tab.move"></button>
+  <button class="tab" role="tab" id="t-sort" aria-controls="tab-sort" aria-selected="false" tabindex="-1" data-tab="sort" data-i18n="tab.sort"></button>
+  <button class="tab" role="tab" id="t-recap" aria-controls="tab-recap" aria-selected="false" tabindex="-1" data-tab="recap" data-i18n="tab.recap"></button>
+</nav>
+
+<main id="main">
+
+<!-- ========== TWINS ========== -->
+<section class="station" id="tab-twins" role="tabpanel" aria-labelledby="t-twins">
+  <div class="lab">
+    <div class="panel stage">
+      <canvas id="twinCanvas" role="img" data-i18n-aria="twins.alt"></canvas>
+      <div class="row">
+        <button class="btn" id="twinSnap" data-i18n="btn.snap"></button>
+        <button class="btn" id="twinReset" data-i18n="twins.reset"></button>
+      </div>
+    </div>
+    <div class="side">
+      <div class="panel">
+        <h2 data-i18n="twins.h"></h2>
+        <p data-i18n="twins.p"></p>
+        <div class="ctl"><label for="sx"><span data-i18n="twins.width"></span><output id="sxOut"></output></label>
+          <input type="range" id="sx" min="0.5" max="2" step="0.25" value="1"></div>
+        <div class="ctl"><label for="sy"><span data-i18n="twins.height"></span><output id="syOut"></output></label>
+          <input type="range" id="sy" min="0.5" max="2" step="0.25" value="1"></div>
+        <label class="check"><input type="checkbox" id="lock" checked><span data-i18n="twins.lock"></span></label>
+        <div class="ctl"><label for="ang"><span data-i18n="twins.turn"></span><output id="angOut"></output></label>
+          <input type="range" id="ang" min="0" max="345" step="15" value="0"></div>
+        <button class="btn" id="flipBtn" aria-pressed="false" data-i18n="twins.flip"></button>
+      </div>
+      <div class="panel verdict v-congruent" id="verdict" aria-live="polite">
+        <p class="big" id="vBig"></p>
+        <p id="vWhy" style="margin:0"></p>
+      </div>
+      <div class="panel">
+        <h3 style="margin-top:0" data-i18n="twins.measure"></h3>
+        <table>
+          <caption class="sr" data-i18n="twins.measure"></caption>
+          <thead><tr><th data-i18n="th.part"></th><th class="num tag-blue" data-i18n="th.blue"></th><th class="num tag-pink" data-i18n="th.pink"></th><th class="num" data-i18n="th.ratio"></th></tr></thead>
+          <tbody id="twinTable"></tbody>
+        </table>
+        <h3 data-i18n="goals.h"></h3>
+        <ul class="goals" id="twinGoals"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== MOVE ========== -->
+<section class="station" id="tab-move" role="tabpanel" aria-labelledby="t-move" hidden>
+  <div class="lab">
+    <div class="panel stage">
+      <canvas id="labCanvas" role="img" data-i18n-aria="move.alt"></canvas>
+      <div class="row">
+        <button class="btn primary" id="btnAnother" data-i18n="btn.another"></button>
+        <button class="btn" id="btnUndo" data-i18n="btn.undo"></button>
+        <button class="btn" id="btnRestart" data-i18n="btn.restart"></button>
+        <button class="btn" id="labSnap" data-i18n="btn.snap"></button>
+      </div>
+      <p class="hint" id="dragHint" data-i18n="move.dragHint"></p>
+    </div>
+    <div class="side">
+      <div class="panel">
+        <div class="seg" id="modeSeg" role="group">
+          <button type="button" data-mode="free" aria-pressed="true" data-i18n="move.free"></button>
+          <button type="button" data-mode="missions" aria-pressed="false" data-i18n="move.missions"></button>
+        </div>
+        <div id="freeBox" style="margin-top:12px">
+          <span class="lbl" data-i18n="move.shape"></span>
+          <div class="seg" id="shapeSeg" role="group">
+            <button type="button" data-shape="triangle" aria-pressed="true" data-i18n="shape.triangle"></button>
+            <button type="button" data-shape="l" aria-pressed="false" data-i18n="shape.l"></button>
+            <button type="button" data-shape="flag" aria-pressed="false" data-i18n="shape.flag"></button>
+          </div>
+        </div>
+        <div id="missionBox" style="margin-top:12px" hidden>
+          <h2 id="mTitle"></h2>
+          <div class="chips" id="mChips"></div>
+          <p id="mTask"></p>
+          <div class="row" style="margin-top:0">
+            <button class="btn good" id="mCheck" data-i18n="mission.check"></button>
+            <button class="btn" id="mHint" data-i18n="mission.hint"></button>
+            <button class="btn" id="mNext" data-i18n="mission.next" hidden></button>
+          </div>
+          <p class="hint" id="mHintText" hidden></p>
+          <p class="status" id="mResult" role="status"></p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="tools" id="toolSeg" role="group">
+          <button type="button" class="tool" data-tool="slide" aria-pressed="true"><b data-i18n="tool.slide"></b><small data-i18n="tool.slide.t"></small></button>
+          <button type="button" class="tool" data-tool="flip" aria-pressed="false"><b data-i18n="tool.flip"></b><small data-i18n="tool.flip.t"></small></button>
+          <button type="button" class="tool" data-tool="turn" aria-pressed="false"><b data-i18n="tool.turn"></b><small data-i18n="tool.turn.t"></small></button>
+          <button type="button" class="tool" data-tool="resize" aria-pressed="false"><b data-i18n="tool.resize"></b><small data-i18n="tool.resize.t"></small></button>
+        </div>
+
+        <div class="toolctl" data-for="slide">
+          <div class="ctl"><label for="dx"><span data-i18n="ctl.dx"></span><output id="dxOut"></output></label>
+            <input type="range" id="dx" min="-12" max="12" step="1" value="0"></div>
+          <div class="ctl"><label for="dy"><span data-i18n="ctl.dy"></span><output id="dyOut"></output></label>
+            <input type="range" id="dy" min="-12" max="12" step="1" value="0"></div>
+        </div>
+
+        <div class="toolctl" data-for="flip" hidden>
+          <span class="lbl" data-i18n="ctl.mirror"></span>
+          <div class="mirrors" id="mirrorBtns">
+            <button type="button" class="btn" data-m="x" aria-pressed="false" data-i18n="mirror.x"></button>
+            <button type="button" class="btn" data-m="y" aria-pressed="false" data-i18n="mirror.y"></button>
+            <button type="button" class="btn" data-m="d1" aria-pressed="false" data-i18n="mirror.d1"></button>
+            <button type="button" class="btn" data-m="d2" aria-pressed="false" data-i18n="mirror.d2"></button>
+          </div>
+        </div>
+
+        <div class="toolctl" data-for="turn" hidden>
+          <div class="ctl"><label for="angle"><span data-i18n="ctl.angle"></span><output id="angleOut"></output></label>
+            <input type="range" id="angle" min="-360" max="360" step="5" value="0"></div>
+          <div class="row" style="margin-top:0">
+            <button type="button" class="btn" data-q="90">90°</button>
+            <button type="button" class="btn" data-q="180">180°</button>
+            <button type="button" class="btn" data-q="270">270°</button>
+            <button type="button" class="btn" data-q="-90">&minus;90°</button>
+          </div>
+          <p class="hint" data-i18n="ctl.angleNote"></p>
+        </div>
+
+        <div class="toolctl" data-for="resize" hidden>
+          <div class="ctl"><label for="scale"><span data-i18n="ctl.scale"></span><output id="scaleOut"></output></label>
+            <input type="range" id="scale" min="0.25" max="3" step="0.25" value="1"></div>
+          <div class="row" style="margin-top:0">
+            <button type="button" class="btn" data-k="0.5">&times;0.5</button>
+            <button type="button" class="btn" data-k="2">&times;2</button>
+            <button type="button" class="btn" data-k="3">&times;3</button>
+          </div>
+        </div>
+
+        <div id="centerBox" hidden style="margin-top:12px">
+          <span class="lbl" data-i18n="ctl.center"></span>
+          <div class="seg" id="centerSeg" role="group">
+            <button type="button" data-c="origin" aria-pressed="true" data-i18n="center.origin"></button>
+            <button type="button" data-c="a" aria-pressed="false" data-i18n="center.a"></button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 style="margin-top:0" data-i18n="rule.h"></h3>
+        <div class="rule"><div class="alg" id="ruleAlg"></div><div id="ruleWords"></div></div>
+        <p class="status" id="sizeCheck"></p>
+        <table>
+          <caption class="sr" data-i18n="rule.h"></caption>
+          <thead><tr><th data-i18n="th.point"></th><th class="num tag-blue" data-i18n="th.start"></th><th class="num tag-pink" data-i18n="th.image"></th></tr></thead>
+          <tbody id="vertTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SORT ========== -->
+<section class="station" id="tab-sort" role="tabpanel" aria-labelledby="t-sort" hidden>
+  <div class="panel">
+    <h2 data-i18n="sort.h"></h2>
+    <p data-i18n="sort.p"></p>
+    <div id="sortBox"></div>
+  </div>
+</section>
+
+<!-- ========== RECAP ========== -->
+<section class="station" id="tab-recap" role="tabpanel" aria-labelledby="t-recap" hidden>
+  <div class="panel">
+    <h2 data-i18n="recap.h"></h2>
+    <ul class="checklist" id="discList"></ul>
+  </div>
+  <div class="panel wrap">
+    <div>
+      <h2 data-i18n="ideas.h"></h2>
+      <div class="ideas" id="ideas"></div>
+    </div>
+  </div>
+  <div class="panel wrap">
+    <div>
+      <h2 data-i18n="snaps.h"></h2>
+      <div class="snaps" id="snaps"></div>
+    </div>
+  </div>
+  <div class="panel wrap">
+    <div>
+      <h2 data-i18n="write.h"></h2>
+      <div class="name"><label for="wName" class="lbl" style="margin:0" data-i18n="write.name"></label><input type="text" id="wName" autocomplete="off"></div>
+      <span class="lbl" data-i18n="write.level"></span>
+      <div class="seg" id="levelSeg" role="group"></div>
+      <div id="writeArea"></div>
+      <div class="row">
+        <button class="btn primary" id="wCopy" data-i18n="write.copy"></button>
+        <button class="btn" id="wDown" data-i18n="write.download"></button>
+        <button class="btn" id="wPrint" data-i18n="write.print"></button>
+        <button class="btn" id="wClear" data-i18n="write.clear"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<details class="wall" id="wall">
+  <summary data-i18n="wall.h"></summary>
+  <div class="body"><dl id="wallList"></dl></div>
+</details>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="printSheet" aria-hidden="true"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const rad = d => d*Math.PI/180;
+const MINUS = '\u2212';
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const COL = {blue:'#2B59FF', pink:'#E8388A', mint:'#12905F', ink:'#14233B', grid:'#DCE8EE', sun:'#FFC533'};
+
+function fmt(n, d=2){
+  const v = Math.round(n*Math.pow(10,d))/Math.pow(10,d);
+  if (v === 0) return '0';
+  return String(v).replace('-', MINUS);
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dist = (a,b) => Math.hypot(a[0]-b[0], a[1]-b[1]);
+const cen = pts => [pts.reduce((s,p)=>s+p[0],0)/pts.length, pts.reduce((s,p)=>s+p[1],0)/pts.length];
+
+/* ============================================================
+   Language
+   ============================================================ */
+let lang = 'en';
+const STR = {
+en: {
+ 'skip':"Skip to content",
+ 'who.name':"My name", 'who.period':"Period",
+ 'app.title':"Shape Lab",
+ 'app.sub':"Explore same shapes, similar shapes, and moving shapes.",
+ 'tab.twins':"Same or similar?", 'tab.move':"Move shapes", 'tab.sort':"Sort pairs", 'tab.recap':"Recap and write",
+ 'btn.snap':"Take a snapshot", 'snap.saved':"Snapshot saved. Find it in Recap and write.",
+ 'btn.another':"Do another move", 'btn.undo':"Undo", 'btn.restart':"Start over",
+ 'twins.alt':"A blue triangle on the left and a pink twin triangle on the right.",
+ 'twins.h':"Make a twin",
+ 'twins.p':"The blue triangle never changes. Change the pink twin and watch the verdict.",
+ 'twins.width':"Width", 'twins.height':"Height", 'twins.turn':"Turn", 'twins.flip':"Flip",
+ 'twins.lock':"Keep the same shape (both sliders move together)",
+ 'twins.reset':"Reset twin", 'twins.blue':"Blue triangle (fixed)", 'twins.pink':"Pink twin",
+ 'twins.measure':"Measure it",
+ 'th.part':"Part", 'th.blue':"Blue", 'th.pink':"Pink", 'th.ratio':"Pink \u00F7 blue",
+ 'th.point':"Point", 'th.start':"Start", 'th.image':"Image",
+ 'side':"Side {n}", 'angle':"Angle {n}",
+ 'v.congruent':"Congruent", 'v.similar':"Similar", 'v.not':"Not similar",
+ 'v.why.congruent':"Same shape and same size. Turning or flipping does not change that.",
+ 'v.why.similar':"Same shape, different size. Every side grows by the same scale factor: {k}.",
+ 'v.why.not':"Different shape. The sides do not grow by the same amount.",
+ 'goals.h':"Try these goals",
+ 'goal.c':"Make a congruent twin that is turned or flipped.",
+ 'goal.s':"Make a similar twin with scale factor 2.",
+ 'goal.n':"Make a twin that is not similar.",
+ 'move.alt':"A coordinate grid with a blue shape and its pink image.",
+ 'move.dragHint':"Tip: with Slide, you can drag on the grid.",
+ 'move.free':"Free play", 'move.missions':"Missions", 'move.shape':"Shape",
+ 'shape.triangle':"Triangle", 'shape.l':"L-shape", 'shape.flag':"Flag",
+ 'tool.slide':"Slide", 'tool.slide.t':"translation",
+ 'tool.flip':"Flip", 'tool.flip.t':"reflection",
+ 'tool.turn':"Turn", 'tool.turn.t':"rotation",
+ 'tool.resize':"Resize", 'tool.resize.t':"dilation",
+ 'ctl.dx':"Right or left (x)", 'ctl.dy':"Up or down (y)",
+ 'ctl.mirror':"Mirror line",
+ 'mirror.x':"x-axis", 'mirror.y':"y-axis", 'mirror.d1':"line y = x", 'mirror.d2':"line y = \u2212x",
+ 'ctl.angle':"Angle", 'ctl.angleNote':"Positive turns go counterclockwise.",
+ 'ctl.scale':"Scale factor", 'ctl.center':"Center",
+ 'center.origin':"Origin (0, 0)", 'center.a':"Point A",
+ 'center.origin.s':"the origin", 'center.a.s':"point A",
+ 'line.x':"the x-axis", 'line.y':"the y-axis", 'line.d1':"the line y = x", 'line.d2':"the line y = \u2212x",
+ 'rule.h':"The rule",
+ 'words.none':"Nothing has changed yet. Try a control.",
+ 'words.slide':"Every point slides {m}.",
+ 'words.flip':"Every point flips across {line}. Each point and its image are the same distance from the line.",
+ 'words.turn':"Every point turns {a}\u00B0 {dir} around {c}.",
+ 'words.resize':"Every point is {k} times as far from {c}.",
+ 'and':"and",
+ 'dir.right':"{n} to the right", 'dir.left':"{n} to the left", 'dir.up':"{n} up", 'dir.down':"{n} down",
+ 'dir.ccw':"counterclockwise", 'dir.cw':"clockwise",
+ 'size.same':"Same size and same shape: congruent.",
+ 'size.new':"Same shape, new size: similar. Scale factor {k}.",
+ 'mission.h':"Mission {n} of {t}",
+ 'mission.check':"Check my answer", 'mission.hint':"Show a hint", 'mission.next':"Next mission",
+ 'mission.ok':"Yes! Your image covers the green target.",
+ 'mission.no':"Not yet. Your image does not cover the green target.",
+ 'mission.target':"Target", 'mission.all':"All missions done. Great work!",
+ 'm1.task':"Slide the triangle so it covers the green target.",
+ 'm1.hint':"Compare point A with the green corner in the same place. Count squares to the right and up.",
+ 'm1.done':"A slide (translation) moves every point the same way.",
+ 'm2.task':"Flip the L so it covers the green target.",
+ 'm2.hint':"The target is on the other side of an axis. Which mirror line is in the middle?",
+ 'm2.done':"A flip (reflection) over the y-axis makes a mirror image.",
+ 'm3.task':"Turn the flag so it covers the green target.",
+ 'm3.hint':"Turn around the origin. Try 90\u00B0.",
+ 'm3.done':"A turn (rotation) of 90\u00B0 counterclockwise around the origin.",
+ 'm4.task':"Resize the triangle so it covers the green target.",
+ 'm4.hint':"The target is bigger. Every side is the same number of times longer. Try scale factor 2.",
+ 'm4.done':"A resize (dilation) with scale factor 2 makes a similar shape.",
+ 'm5.task':"Use two moves: flip the L, then slide it onto the target. Press \u201CDo another move\u201D between the moves.",
+ 'm5.hint':"First flip over the x-axis. Press \u201CDo another move.\u201D Then slide to the right.",
+ 'm5.done':"You put a flip and a slide together. Both moves keep the shape congruent.",
+ 'sort.h':"Are they congruent, similar, or neither?",
+ 'sort.p':"Look at each pair. Turning and flipping do not change a shape.",
+ 'sort.q':"Pair {n} of {t}",
+ 'sort.measure':"Show measurements", 'sort.hide':"Hide measurements",
+ 'sort.right':"Correct!", 'sort.wrong':"Not quite. Look again, or show the measurements, and try again.",
+ 'sort.next':"Next pair", 'sort.done':"You finished! First-try score: {s} of {n}.", 'sort.again':"Play again",
+ 'p1.why':"Same size and same shape. One is only turned. Congruent.",
+ 'p2.why':"Same shape, but one is twice as big (scale factor 2). Similar.",
+ 'p3.why':"The sides do not grow by the same amount. The shape is different. Neither.",
+ 'p4.why':"All squares have the same shape. The sizes are different. Similar.",
+ 'p5.why':"One is a mirror image. Same size and same shape. Congruent.",
+ 'p6.why':"Every side is 2 times longer and the angles match. Similar.",
+ 'p7.why':"It was stretched wider only. The shape changed. Neither.",
+ 'p8.why':"Same size and same shape, just turned around. Congruent.",
+ 'recap.h':"What did you discover?",
+ 'disc.c':"Twins: made a congruent twin", 'disc.s':"Twins: made a similar twin (scale factor 2)", 'disc.n':"Twins: made a twin that is not similar",
+ 'disc.slide':"Tried a slide (translation)", 'disc.flip':"Tried a flip (reflection)", 'disc.turn':"Tried a turn (rotation)", 'disc.resize':"Tried a resize (dilation)",
+ 'disc.missions':"Missions solved: {n} of {t}",
+ 'disc.sort':"Sort pairs: {s} of {n} on the first try", 'disc.sort0':"Sort pairs: not finished yet",
+ 'ideas.h':"Big ideas",
+ 'idea.changes':"What changes", 'idea.same':"What stays the same", 'idea.result':"Result",
+ 'idea.slide.c':"Where the shape is.", 'idea.slide.s':"Size, shape, and the way it faces.", 'idea.slide.r':"Congruent.",
+ 'idea.flip.c':"The way the shape faces. It becomes a mirror image.", 'idea.flip.s':"Size and shape.", 'idea.flip.r':"Congruent.",
+ 'idea.turn.c':"The direction the shape faces.", 'idea.turn.s':"Size and shape.", 'idea.turn.r':"Congruent.",
+ 'idea.resize.c':"Size. Every side grows or shrinks by the scale factor.", 'idea.resize.s':"Shape and angles.", 'idea.resize.r':"Similar. Congruent only if the scale factor is 1.",
+ 'snaps.h':"My snapshots", 'snaps.empty':"No snapshots yet. Use \u201CTake a snapshot\u201D in the lab.",
+ 'snaps.cap':"Caption", 'snaps.remove':"Remove",
+ 'write.h':"Write about it", 'write.name':"My name", 'write.level':"Choose your writing level",
+ 'lvl1':"Level 1: word bank", 'lvl2':"Level 2: sentence frames", 'lvl3':"Level 3: paragraph frame", 'lvl4':"Level 4: free writing",
+ 'l1.p':"Choose the best word for each sentence.", 'l2.p':"Finish each sentence with your own words.",
+ 'l3.p':"Complete the paragraph. Use what you saw in the lab.",
+ 'l4.p':"Explain what you learned about congruent shapes, similar shapes, and transformations. Use at least four words from the word wall. Add snapshots as evidence.",
+ 'write.check':"Check my sentences", 'write.choose':"choose\u2026", 'write.score':"{n} of {t} correct",
+ 'write.words':"{n} words", 'write.vocab':"Word wall words I used",
+ 'write.copy':"Copy my writing", 'write.download':"Download .txt", 'write.print':"Print or save as PDF", 'write.clear':"Start a new page",
+ 'write.copied':"Copied!", 'write.cleared':"New page ready.", 'write.title':"Shape Lab: what I learned",
+ 'wall.h':"Word wall",
+},
+es: {
+ 'skip':"Saltar al contenido",
+ 'who.name':"Mi nombre", 'who.period':"Per\u00EDodo",
+ 'app.title':"Laboratorio de figuras",
+ 'app.sub':"Explora figuras iguales, figuras semejantes y figuras que se mueven.",
+ 'tab.twins':"\u00BFIguales o semejantes?", 'tab.move':"Mueve figuras", 'tab.sort':"Clasifica pares", 'tab.recap':"Repaso y escritura",
+ 'btn.snap':"Tomar una foto", 'snap.saved':"Foto guardada. B\u00FAscala en Repaso y escritura.",
+ 'btn.another':"Hacer otro movimiento", 'btn.undo':"Deshacer", 'btn.restart':"Empezar de nuevo",
+ 'twins.alt':"Un tri\u00E1ngulo azul a la izquierda y un tri\u00E1ngulo gemelo rosado a la derecha.",
+ 'twins.h':"Crea un gemelo",
+ 'twins.p':"El tri\u00E1ngulo azul nunca cambia. Cambia el gemelo rosado y mira el veredicto.",
+ 'twins.width':"Ancho", 'twins.height':"Alto", 'twins.turn':"Girar", 'twins.flip':"Voltear",
+ 'twins.lock':"Mantener la misma forma (los dos controles se mueven juntos)",
+ 'twins.reset':"Reiniciar gemelo", 'twins.blue':"Tri\u00E1ngulo azul (fijo)", 'twins.pink':"Gemelo rosado",
+ 'twins.measure':"M\u00EDdelo",
+ 'th.part':"Parte", 'th.blue':"Azul", 'th.pink':"Rosado", 'th.ratio':"Rosado \u00F7 azul",
+ 'th.point':"Punto", 'th.start':"Inicio", 'th.image':"Imagen",
+ 'side':"Lado {n}", 'angle':"\u00C1ngulo {n}",
+ 'v.congruent':"Congruentes", 'v.similar':"Semejantes", 'v.not':"No semejantes",
+ 'v.why.congruent':"Misma forma y mismo tama\u00F1o. Girar o voltear no cambia eso.",
+ 'v.why.similar':"Misma forma, distinto tama\u00F1o. Cada lado crece con el mismo factor de escala: {k}.",
+ 'v.why.not':"Forma diferente. Los lados no crecen en la misma cantidad.",
+ 'goals.h':"Prueba estas metas",
+ 'goal.c':"Crea un gemelo congruente que est\u00E9 girado o volteado.",
+ 'goal.s':"Crea un gemelo semejante con factor de escala 2.",
+ 'goal.n':"Crea un gemelo que no sea semejante.",
+ 'move.alt':"Una cuadr\u00EDcula con una figura azul y su imagen rosada.",
+ 'move.dragHint':"Consejo: con Deslizar, puedes arrastrar sobre la cuadr\u00EDcula.",
+ 'move.free':"Juego libre", 'move.missions':"Misiones", 'move.shape':"Figura",
+ 'shape.triangle':"Tri\u00E1ngulo", 'shape.l':"Forma de L", 'shape.flag':"Bandera",
+ 'tool.slide':"Deslizar", 'tool.slide.t':"traslaci\u00F3n",
+ 'tool.flip':"Voltear", 'tool.flip.t':"reflexi\u00F3n",
+ 'tool.turn':"Girar", 'tool.turn.t':"rotaci\u00F3n",
+ 'tool.resize':"Cambiar tama\u00F1o", 'tool.resize.t':"dilataci\u00F3n",
+ 'ctl.dx':"Derecha o izquierda (x)", 'ctl.dy':"Arriba o abajo (y)",
+ 'ctl.mirror':"L\u00EDnea de espejo",
+ 'mirror.x':"eje x", 'mirror.y':"eje y", 'mirror.d1':"recta y = x", 'mirror.d2':"recta y = \u2212x",
+ 'ctl.angle':"\u00C1ngulo", 'ctl.angleNote':"Los giros positivos van en sentido contrario a las agujas del reloj.",
+ 'ctl.scale':"Factor de escala", 'ctl.center':"Centro",
+ 'center.origin':"Origen (0, 0)", 'center.a':"Punto A",
+ 'center.origin.s':"el origen", 'center.a.s':"el punto A",
+ 'line.x':"el eje x", 'line.y':"el eje y", 'line.d1':"la recta y = x", 'line.d2':"la recta y = \u2212x",
+ 'rule.h':"La regla",
+ 'words.none':"Todav\u00EDa nada cambi\u00F3. Prueba un control.",
+ 'words.slide':"Cada punto se desliza {m}.",
+ 'words.flip':"Cada punto se voltea sobre {line}. Cada punto y su imagen est\u00E1n a la misma distancia de la l\u00EDnea.",
+ 'words.turn':"Cada punto gira {a}\u00B0 {dir} alrededor de {c}.",
+ 'words.resize':"Cada punto queda a {k} veces la distancia de {c}.",
+ 'and':"y",
+ 'dir.right':"{n} a la derecha", 'dir.left':"{n} a la izquierda", 'dir.up':"{n} hacia arriba", 'dir.down':"{n} hacia abajo",
+ 'dir.ccw':"en sentido contrario a las agujas del reloj", 'dir.cw':"en el sentido de las agujas del reloj",
+ 'size.same':"Mismo tama\u00F1o y misma forma: congruentes.",
+ 'size.new':"Misma forma, nuevo tama\u00F1o: semejantes. Factor de escala {k}.",
+ 'mission.h':"Misi\u00F3n {n} de {t}",
+ 'mission.check':"Revisar mi respuesta", 'mission.hint':"Ver una pista", 'mission.next':"Siguiente misi\u00F3n",
+ 'mission.ok':"\u00A1S\u00ED! Tu imagen cubre el objetivo verde.",
+ 'mission.no':"Todav\u00EDa no. Tu imagen no cubre el objetivo verde.",
+ 'mission.target':"Objetivo", 'mission.all':"Terminaste todas las misiones. \u00A1Buen trabajo!",
+ 'm1.task':"Desliza el tri\u00E1ngulo para que cubra el objetivo verde.",
+ 'm1.hint':"Compara el punto A con la esquina verde que est\u00E1 en el mismo lugar. Cuenta los cuadros hacia la derecha y hacia arriba.",
+ 'm1.done':"Una traslaci\u00F3n (deslizar) mueve cada punto de la misma manera.",
+ 'm2.task':"Voltea la L para que cubra el objetivo verde.",
+ 'm2.hint':"El objetivo est\u00E1 al otro lado de un eje. \u00BFQu\u00E9 l\u00EDnea de espejo est\u00E1 en el medio?",
+ 'm2.done':"Una reflexi\u00F3n (voltear) sobre el eje y hace una imagen en espejo.",
+ 'm3.task':"Gira la bandera para que cubra el objetivo verde.",
+ 'm3.hint':"Gira alrededor del origen. Prueba 90\u00B0.",
+ 'm3.done':"Una rotaci\u00F3n (giro) de 90\u00B0 en sentido contrario a las agujas del reloj alrededor del origen.",
+ 'm4.task':"Cambia el tama\u00F1o del tri\u00E1ngulo para que cubra el objetivo verde.",
+ 'm4.hint':"El objetivo es m\u00E1s grande. Cada lado es el mismo n\u00FAmero de veces m\u00E1s largo. Prueba el factor de escala 2.",
+ 'm4.done':"Una dilataci\u00F3n (cambiar tama\u00F1o) con factor de escala 2 hace una figura semejante.",
+ 'm5.task':"Usa dos movimientos: voltea la L y luego desl\u00EDzala hasta el objetivo. Presiona \u201CHacer otro movimiento\u201D entre los movimientos.",
+ 'm5.hint':"Primero voltea sobre el eje x. Presiona \u201CHacer otro movimiento\u201D. Luego desliza hacia la derecha.",
+ 'm5.done':"Juntaste una reflexi\u00F3n y una traslaci\u00F3n. Los dos movimientos mantienen la figura congruente.",
+ 'sort.h':"\u00BFSon congruentes, semejantes o ninguno?",
+ 'sort.p':"Mira cada par. Girar y voltear no cambian una figura.",
+ 'sort.q':"Par {n} de {t}",
+ 'sort.measure':"Mostrar medidas", 'sort.hide':"Ocultar medidas",
+ 'sort.right':"\u00A1Correcto!", 'sort.wrong':"Casi. Mira otra vez, o muestra las medidas, e int\u00E9ntalo de nuevo.",
+ 'sort.next':"Siguiente par", 'sort.done':"\u00A1Terminaste! Puntaje al primer intento: {s} de {n}.", 'sort.again':"Jugar otra vez",
+ 'p1.why':"Mismo tama\u00F1o y misma forma. Uno solo est\u00E1 girado. Congruentes.",
+ 'p2.why':"Misma forma, pero uno es el doble de grande (factor de escala 2). Semejantes.",
+ 'p3.why':"Los lados no crecen en la misma cantidad. La forma es diferente. Ninguno.",
+ 'p4.why':"Todos los cuadrados tienen la misma forma. Los tama\u00F1os son diferentes. Semejantes.",
+ 'p5.why':"Uno es una imagen en espejo. Mismo tama\u00F1o y misma forma. Congruentes.",
+ 'p6.why':"Cada lado es 2 veces m\u00E1s largo y los \u00E1ngulos coinciden. Semejantes.",
+ 'p7.why':"Solo se estir\u00F3 a lo ancho. La forma cambi\u00F3. Ninguno.",
+ 'p8.why':"Mismo tama\u00F1o y misma forma, solo est\u00E1 girado. Congruentes.",
+ 'recap.h':"\u00BFQu\u00E9 descubriste?",
+ 'disc.c':"Gemelos: cre\u00E9 un gemelo congruente", 'disc.s':"Gemelos: cre\u00E9 un gemelo semejante (factor de escala 2)", 'disc.n':"Gemelos: cre\u00E9 un gemelo que no es semejante",
+ 'disc.slide':"Prob\u00E9 una traslaci\u00F3n (deslizar)", 'disc.flip':"Prob\u00E9 una reflexi\u00F3n (voltear)", 'disc.turn':"Prob\u00E9 una rotaci\u00F3n (girar)", 'disc.resize':"Prob\u00E9 una dilataci\u00F3n (cambiar tama\u00F1o)",
+ 'disc.missions':"Misiones resueltas: {n} de {t}",
+ 'disc.sort':"Clasifica pares: {s} de {n} al primer intento", 'disc.sort0':"Clasifica pares: todav\u00EDa no terminas",
+ 'ideas.h':"Ideas clave",
+ 'idea.changes':"Qu\u00E9 cambia", 'idea.same':"Qu\u00E9 queda igual", 'idea.result':"Resultado",
+ 'idea.slide.c':"D\u00F3nde est\u00E1 la figura.", 'idea.slide.s':"El tama\u00F1o, la forma y hacia d\u00F3nde mira.", 'idea.slide.r':"Congruente.",
+ 'idea.flip.c':"Hacia d\u00F3nde mira la figura. Se vuelve una imagen en espejo.", 'idea.flip.s':"El tama\u00F1o y la forma.", 'idea.flip.r':"Congruente.",
+ 'idea.turn.c':"La direcci\u00F3n hacia donde mira la figura.", 'idea.turn.s':"El tama\u00F1o y la forma.", 'idea.turn.r':"Congruente.",
+ 'idea.resize.c':"El tama\u00F1o. Cada lado crece o se encoge seg\u00FAn el factor de escala.", 'idea.resize.s':"La forma y los \u00E1ngulos.", 'idea.resize.r':"Semejante. Congruente solo si el factor de escala es 1.",
+ 'snaps.h':"Mis fotos", 'snaps.empty':"Todav\u00EDa no hay fotos. Usa \u201CTomar una foto\u201D en el laboratorio.",
+ 'snaps.cap':"T\u00EDtulo", 'snaps.remove':"Quitar",
+ 'write.h':"Escribe sobre lo que aprendiste", 'write.name':"Mi nombre", 'write.level':"Elige tu nivel de escritura",
+ 'lvl1':"Nivel 1: banco de palabras", 'lvl2':"Nivel 2: marcos de oraciones", 'lvl3':"Nivel 3: marco de p\u00E1rrafo", 'lvl4':"Nivel 4: escritura libre",
+ 'l1.p':"Elige la mejor palabra para cada oraci\u00F3n.", 'l2.p':"Termina cada oraci\u00F3n con tus propias palabras.",
+ 'l3.p':"Completa el p\u00E1rrafo. Usa lo que viste en el laboratorio.",
+ 'l4.p':"Explica lo que aprendiste sobre figuras congruentes, figuras semejantes y transformaciones. Usa al menos cuatro palabras del muro de palabras. Agrega fotos como evidencia.",
+ 'write.check':"Revisar mis oraciones", 'write.choose':"elige\u2026", 'write.score':"{n} de {t} correctas",
+ 'write.words':"{n} palabras", 'write.vocab':"Palabras del muro que us\u00E9",
+ 'write.copy':"Copiar mi escritura", 'write.download':"Descargar .txt", 'write.print':"Imprimir o guardar como PDF", 'write.clear':"Empezar una p\u00E1gina nueva",
+ 'write.copied':"\u00A1Copiado!", 'write.cleared':"P\u00E1gina nueva lista.", 'write.title':"Laboratorio de figuras: lo que aprend\u00ED",
+ 'wall.h':"Muro de palabras",
+}};
+const t = (k, v) => {
+  let s = (STR[lang] && STR[lang][k]) || STR.en[k] || k;
+  if (v) for (const key in v) s = s.split('{'+key+'}').join(v[key]);
+  return s;
+};
+
+/* Word wall: always bilingual */
+const WALL = [
+ ['congruent','congruente',"Same size and same shape.","Mismo tama\u00F1o y misma forma."],
+ ['similar','semejante',"Same shape. The size can be different.","Misma forma. El tama\u00F1o puede ser diferente."],
+ ['transformation','transformaci\u00F3n',"A move or change of a shape on a grid.","Un movimiento o cambio de una figura en una cuadr\u00EDcula."],
+ ['translation (slide)','traslaci\u00F3n',"Every point moves the same distance in the same direction.","Cada punto se mueve la misma distancia en la misma direcci\u00F3n."],
+ ['reflection (flip)','reflexi\u00F3n',"A mirror image across a line.","Una imagen en espejo a trav\u00E9s de una l\u00EDnea."],
+ ['rotation (turn)','rotaci\u00F3n',"A turn around a center point.","Un giro alrededor de un punto central."],
+ ['dilation (resize)','dilataci\u00F3n',"Makes a shape bigger or smaller using a scale factor.","Hace una figura m\u00E1s grande o m\u00E1s peque\u00F1a con un factor de escala."],
+ ['scale factor','factor de escala',"The number you multiply the sides by.","El n\u00FAmero por el que multiplicas los lados."],
+ ['vertex (vertices)','v\u00E9rtice(s)',"A corner of a shape.","Una esquina de una figura."],
+ ['original','figura original',"The shape before it moves.","La figura antes de moverse."],
+ ['image','imagen',"The new shape after a transformation.","La figura nueva despu\u00E9s de una transformaci\u00F3n."],
+ ['corresponding sides','lados correspondientes',"Sides in the same place on two shapes.","Lados que est\u00E1n en el mismo lugar en dos figuras."],
+ ['angle','\u00E1ngulo',"The space between two sides at a corner.","El espacio entre dos lados en una esquina."],
+ ['coordinates','coordenadas',"Two numbers (x, y) that name a point.","Dos n\u00FAmeros (x, y) que nombran un punto."],
+];
+
+/* ============================================================
+   Shared canvas helpers
+   ============================================================ */
+function prep(cv){
+  const r = cv.getBoundingClientRect();
+  if (r.width < 10) return null;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = Math.round(r.width*dpr), H = Math.round(r.height*dpr);
+  if (cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,r.width,r.height);
+  return {ctx, w:r.width, h:r.height};
+}
+function polyPath(ctx, pts, X, Y){
+  ctx.beginPath();
+  pts.forEach((p,i) => i ? ctx.lineTo(X(p[0]),Y(p[1])) : ctx.moveTo(X(p[0]),Y(p[1])));
+  ctx.closePath();
+}
+function tag(ctx, text, x, y, color, size=15, align='center'){
+  ctx.font = `600 ${size}px Lexend, system-ui, sans-serif`;
+  ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = '#fff';
+  ctx.strokeText(text, x, y);
+  ctx.fillStyle = color; ctx.fillText(text, x, y);
+}
+function drawShape(ctx, pts, X, Y, color, fillAlpha, labels, prime, dashed){
+  ctx.save();
+  polyPath(ctx, pts, X, Y);
+  ctx.globalAlpha = fillAlpha; ctx.fillStyle = color; ctx.fill();
+  ctx.globalAlpha = 1; ctx.lineWidth = 3; ctx.strokeStyle = color; ctx.lineJoin = 'round';
+  if (dashed) ctx.setLineDash([8,6]);
+  ctx.stroke(); ctx.setLineDash([]);
+  if (labels){
+    const c = cen(pts.map(p => [X(p[0]), Y(p[1])]));
+    pts.forEach((p,i) => {
+      const px = X(p[0]), py = Y(p[1]);
+      ctx.beginPath(); ctx.arc(px,py,4.5,0,Math.PI*2); ctx.fillStyle = color; ctx.fill();
+      let dx = px-c[0], dy = py-c[1]; const m = Math.hypot(dx,dy)||1;
+      tag(ctx, 'ABCDEFGH'[i] + (prime ? '\u2032' : ''), px+dx/m*17, py+dy/m*17, color, 15);
+    });
+  }
+  ctx.restore();
+}
+function toast(msg){
+  const el = $('#toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+/* ============================================================
+   Progress + snapshots (shared)
+   ============================================================ */
+/* ---------- Classroom Logger (Google Sheet: "Classroom Logger, BMS 2026") ---------- */
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwV7Hd_JRL54Xbxm2tiAFx3kWm_WFO5nxSotzCD0PiAuEYtx4Z3AlTQ3UwwJYrsOKS6/exec";
+const APP_NAME = "shape-lab";
+let hasLoggedStart = false;
+function sendLog(payload){
+  try {
+    fetch(WEBHOOK_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)});
+  } catch(e) { /* never block a student's work because logging failed */ }
+}
+function logEvent(extra){
+  try {
+    const base = {app:APP_NAME, student:((writing.name||'').trim() || 'unknown'), period:((writing.period||'').trim())};
+    if (!hasLoggedStart && extra.event !== 'start'){ hasLoggedStart = true; sendLog(Object.assign({}, base, {event:'start'})); }
+    if (extra.event === 'start') hasLoggedStart = true;
+    sendLog(Object.assign(base, extra));
+  } catch(e) {}
+}
+function mark(k){ if (!progress[k]){ progress[k] = true; logEvent({event:'explore', station:'move-' + k, stageIndex:1, correct:true}); } }
+const progress = {twinC:false, twinS:false, twinN:false, slide:false, flip:false, turn:false, resize:false, missions:new Set(), sortScore:null, sortTotal:8};
+const snaps = [];
+function addSnap(cv, caption){
+  const w = 640, h = Math.round(640 * cv.height / cv.width);
+  const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+  tmp.getContext('2d').drawImage(cv, 0, 0, w, h);
+  if (snaps.length >= 8) snaps.shift();
+  snaps.push({src: tmp.toDataURL('image/png'), cap: caption});
+  logEvent({event:'snapshot', station:'snapshot', stageIndex:snaps.length, text:caption});
+  toast(t('snap.saved'));
+}
+
+/* ============================================================
+   STATION 1: Twins
+   ============================================================ */
+const TRI = [[0,0],[4,0],[0,3]];
+const TRI_SIDES = [4,5,3];
+const twin = {sx:1, sy:1, angle:0, flip:false, lock:true, touched:false};
+const OR_C = [5.5, 8.25], TW_C = [15.5, 8.25];
+
+function origPts(){ const c = cen(TRI); return TRI.map(p => [p[0]-c[0]+OR_C[0], p[1]-c[1]+OR_C[1]]); }
+function twinPts(){
+  const c = cen(TRI), a = rad(twin.angle), cs = Math.cos(a), sn = Math.sin(a);
+  return TRI.map(([x,y]) => {
+    let rx = x-c[0], ry = y-c[1];
+    if (twin.flip) rx = -rx;
+    rx *= twin.sx; ry *= twin.sy;
+    return [rx*cs - ry*sn + TW_C[0], rx*sn + ry*cs + TW_C[1]];
+  });
+}
+const sidesOf = p => [dist(p[0],p[1]), dist(p[1],p[2]), dist(p[2],p[0])];
+function anglesOf(p){
+  return p.map((q,i) => {
+    const a = p[(i+2)%3], b = p[(i+1)%3];
+    const v1 = [a[0]-q[0], a[1]-q[1]], v2 = [b[0]-q[0], b[1]-q[1]];
+    const cos = (v1[0]*v2[0]+v1[1]*v2[1]) / (Math.hypot(...v1)*Math.hypot(...v2));
+    return Math.acos(Math.max(-1,Math.min(1,cos))) * 180/Math.PI;
+  });
+}
+function twinVerdict(){
+  const pts = twinPts(), s = sidesOf(pts), r = s.map((v,i) => v/TRI_SIDES[i]);
+  const eps = 0.02;
+  if (Math.max(...r) - Math.min(...r) > eps) return {kind:'not', pts, s, r};
+  if (Math.abs(r[0]-1) < eps) return {kind:'congruent', pts, s, r, k:1};
+  return {kind:'similar', pts, s, r, k:r[0]};
+}
+function drawTwins(){
+  const P = prep($('#twinCanvas')); if (!P) return;
+  const {ctx,w,h} = P, WW = 22, HH = 16.5;
+  const X = x => x/WW*w, Y = y => h - y/HH*h;
+  ctx.strokeStyle = COL.grid; ctx.lineWidth = 1;
+  for (let x=0;x<=WW;x++){ ctx.beginPath(); ctx.moveTo(X(x),0); ctx.lineTo(X(x),h); ctx.stroke(); }
+  for (let y=0;y<=HH;y+=1){ ctx.beginPath(); ctx.moveTo(0,Y(y)); ctx.lineTo(w,Y(y)); ctx.stroke(); }
+  ctx.setLineDash([6,6]); ctx.strokeStyle = '#9db4c2'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(X(11),0); ctx.lineTo(X(11),h); ctx.stroke(); ctx.setLineDash([]);
+  const o = origPts(), v = twinVerdict();
+  drawShape(ctx, o, X, Y, COL.blue, .16, true, false);
+  drawShape(ctx, v.pts, X, Y, COL.pink, .16, true, true);
+  const lab = (pts, sides, color) => {
+    const c = cen(pts);
+    pts.forEach((p,i) => {
+      const q = pts[(i+1)%3], mx = (p[0]+q[0])/2, my = (p[1]+q[1])/2;
+      let dx = mx-c[0], dy = my-c[1]; const m = Math.hypot(dx,dy)||1;
+      tag(ctx, fmt(sides[i],1), X(mx+dx/m*0.9), Y(my+dy/m*0.9), color, 14);
+    });
+  };
+  lab(o, TRI_SIDES, COL.blue); lab(v.pts, v.s, COL.pink);
+  tag(ctx, t('twins.blue'), X(5.5), 18, COL.blue, 14);
+  tag(ctx, t('twins.pink'), X(16.5), 18, COL.pink, 14);
+  updateTwinPanel(v);
+}
+function updateTwinPanel(v){
+  $('#sxOut').textContent = '\u00D7' + fmt(twin.sx); $('#syOut').textContent = '\u00D7' + fmt(twin.sy);
+  $('#angOut').textContent = twin.angle + '\u00B0';
+  $('#flipBtn').setAttribute('aria-pressed', twin.flip);
+  const box = $('#verdict'); box.className = 'panel verdict v-' + v.kind;
+  $('#vBig').textContent = t('v.' + v.kind);
+  $('#vWhy').textContent = t('v.why.' + v.kind, {k: v.k ? '\u00D7' + fmt(v.k) : ''});
+  const oa = anglesOf(origPts()), ta = anglesOf(v.pts);
+  let rows = '';
+  [0,1,2].forEach(i => rows += `<tr><td>${esc(t('side',{n:'AB BC CA'.split(' ')[i]}))}</td><td class="num">${fmt(TRI_SIDES[i],1)}</td><td class="num">${fmt(v.s[i],1)}</td><td class="num">\u00D7${fmt(v.r[i])}</td></tr>`);
+  [0,1,2].forEach(i => rows += `<tr><td>${esc(t('angle',{n:'ABC'[i]}))}</td><td class="num">${fmt(oa[i],1)}\u00B0</td><td class="num">${fmt(ta[i],1)}\u00B0</td><td class="num"></td></tr>`);
+  $('#twinTable').innerHTML = rows;
+  if (twin.touched){
+    const before = [progress.twinC, progress.twinS, progress.twinN];
+    if (v.kind === 'congruent' && (twin.flip || twin.angle % 360 !== 0)) progress.twinC = true;
+    if (v.kind === 'similar' && Math.abs(v.k - 2) < 0.01) progress.twinS = true;
+    if (v.kind === 'not') progress.twinN = true;
+    [progress.twinC, progress.twinS, progress.twinN].forEach((now,i) => { if (now && !before[i]) logEvent({event:'goal', station:'twins', stageIndex:i+1, correct:true}); });
+  }
+  $('#twinGoals').innerHTML = [[progress.twinC,'goal.c'],[progress.twinS,'goal.s'],[progress.twinN,'goal.n']]
+    .map(([d,k]) => checkItem(d, t(k))).join('');
+}
+const CHECK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function checkItem(done, text){
+  return `<li class="${done?'done':''}"><span class="ico">${CHECK_SVG}</span><span>${esc(text)}<span class="sr"> (${done ? 'done' : 'not yet'})</span></span></li>`;
+}
+function bindTwins(){
+  const touch = () => { twin.touched = true; drawTwins(); };
+  $('#sx').addEventListener('input', e => { twin.sx = +e.target.value; if (twin.lock){ twin.sy = twin.sx; $('#sy').value = twin.sy; } touch(); });
+  $('#sy').addEventListener('input', e => { twin.sy = +e.target.value; if (twin.lock){ twin.sx = twin.sy; $('#sx').value = twin.sx; } touch(); });
+  $('#lock').addEventListener('change', e => { twin.lock = e.target.checked; if (twin.lock){ twin.sy = twin.sx; $('#sy').value = twin.sy; } touch(); });
+  $('#ang').addEventListener('input', e => { twin.angle = +e.target.value; touch(); });
+  $('#flipBtn').addEventListener('click', () => { twin.flip = !twin.flip; touch(); });
+  $('#twinReset').addEventListener('click', () => {
+    Object.assign(twin, {sx:1, sy:1, angle:0, flip:false, lock:true});
+    $('#sx').value = 1; $('#sy').value = 1; $('#ang').value = 0; $('#lock').checked = true; drawTwins();
+  });
+  $('#twinSnap').addEventListener('click', () => {
+    const v = twinVerdict();
+    addSnap($('#twinCanvas'), t('v.' + v.kind) + (v.kind === 'similar' ? ' (\u00D7' + fmt(v.k) + ')' : ''));
+  });
+}
+
+/* ============================================================
+   STATION 2: Move lab
+   ============================================================ */
+const SHAPES = {
+  triangle: [[1,1],[4,1],[1,3]],
+  l: [[1,1],[4,1],[4,2],[2,2],[2,4],[1,4]],
+  flag: [[1,1],[1,5],[4,4],[2,3.2],[2,1]],
+};
+const cp = pts => pts.map(p => p.slice());
+const MISSIONS = [
+  {tool:'slide',  start:[[-6,1],[-3,1],[-6,3]], move: p => p.map(([x,y]) => [x+7, y+2])},
+  {tool:'flip',   start:SHAPES.l,              move: p => p.map(([x,y]) => [-x, y])},
+  {tool:'turn',   start:SHAPES.flag,           move: p => p.map(([x,y]) => [-y, x])},
+  {tool:'resize', start:[[1,1],[3,1],[1,3]],   move: p => p.map(([x,y]) => [2*x, 2*y])},
+  {tool:'flip',   start:[[-5,1],[-2,1],[-2,2],[-4,2],[-4,4],[-5,4]], move: p => p.map(([x,y]) => [x+7, -y])},
+];
+const lab = {
+  mode:'free', shapeKey:'triangle', base:cp(SHAPES.triangle), start:cp(SHAPES.triangle), history:[],
+  tool:'slide', p:null, m:0, target:null, hintOn:false, result:null,
+};
+function freshP(center){ return {dx:0, dy:0, mirror:null, reflT:1, angle:0, scale:1, center: center || 'origin'}; }
+lab.p = freshP();
+
+const anim = {}; let raf = 0;
+function animateTo(key, to, ms=600){
+  if (reduceMotion){ lab.p[key] = to; delete anim[key]; drawLab(); return; }
+  anim[key] = {from:lab.p[key], to, t0:performance.now(), ms};
+  if (!raf) raf = requestAnimationFrame(step);
+}
+function step(now){
+  raf = 0; let active = false;
+  for (const k in anim){
+    const a = anim[k], u = Math.min(1, (now-a.t0)/a.ms);
+    const e = u < .5 ? 2*u*u : 1 - Math.pow(-2*u+2,2)/2;
+    lab.p[k] = a.from + (a.to-a.from)*e;
+    if (u >= 1){ lab.p[k] = a.to; delete anim[k]; } else active = true;
+  }
+  drawLab();
+  if (active) raf = requestAnimationFrame(step);
+}
+function settle(){ for (const k in anim){ lab.p[k] = anim[k].to; delete anim[k]; } }
+function finalP(){ const p = Object.assign({}, lab.p); for (const k in anim) p[k] = anim[k].to; return p; }
+
+const reflectPt = ([x,y], m) => m==='x' ? [x,-y] : m==='y' ? [-x,y] : m==='d1' ? [y,x] : [-y,-x];
+function imagePts(base, tool, p){
+  const c = p.center === 'a' ? base[0] : [0,0];
+  switch(tool){
+    case 'slide': return base.map(([x,y]) => [x+p.dx, y+p.dy]);
+    case 'flip':
+      if (!p.mirror) return cp(base);
+      return base.map(q => { const r = reflectPt(q, p.mirror); return [q[0]+(r[0]-q[0])*p.reflT, q[1]+(r[1]-q[1])*p.reflT]; });
+    case 'turn': {
+      const a = rad(p.angle), cs = Math.cos(a), sn = Math.sin(a);
+      return base.map(([x,y]) => { const dx = x-c[0], dy = y-c[1]; return [c[0]+dx*cs-dy*sn, c[1]+dx*sn+dy*cs]; });
+    }
+    case 'resize': return base.map(([x,y]) => [c[0]+(x-c[0])*p.scale, c[1]+(y-c[1])*p.scale]);
+  }
+  return cp(base);
+}
+function isIdentity(tool, p){
+  if (tool==='slide') return p.dx===0 && p.dy===0;
+  if (tool==='flip') return !p.mirror;
+  if (tool==='turn') return Math.abs(p.angle % 360) < 1e-9;
+  return Math.abs(p.scale-1) < 1e-9;
+}
+const changed = (a,b) => a.some((q,i) => Math.abs(q[0]-b[i][0])>1e-6 || Math.abs(q[1]-b[i][1])>1e-6);
+
+function drawLab(){
+  const P = prep($('#labCanvas')); if (!P) return;
+  const {ctx,w,h} = P, R = 10;
+  const X = x => (x+R)/(2*R)*w, Y = y => h - (y+R)/(2*R)*h;
+  ctx.lineWidth = 1; ctx.strokeStyle = COL.grid;
+  for (let i=-R;i<=R;i++){
+    ctx.beginPath(); ctx.moveTo(X(i),0); ctx.lineTo(X(i),h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,Y(i)); ctx.lineTo(w,Y(i)); ctx.stroke();
+  }
+  ctx.strokeStyle = COL.ink; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0,Y(0)); ctx.lineTo(w,Y(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(X(0),0); ctx.lineTo(X(0),h); ctx.stroke();
+  ctx.font = '500 11px Lexend, sans-serif'; ctx.fillStyle = '#5b6d84'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let i=-R+2;i<R;i+=2){ if (i===0) continue; ctx.fillText(String(i).replace('-',MINUS), X(i), Y(0)+4); }
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let i=-R+2;i<R;i+=2){ if (i===0) continue; ctx.fillText(String(i).replace('-',MINUS), X(0)-5, Y(i)); }
+  ctx.textAlign='left'; ctx.fillText('x', w-12, Y(0)-10); ctx.fillText('y', X(0)+8, 10);
+
+  const cur = imagePts(lab.base, lab.tool, lab.p);
+  const showImg = changed(lab.base, cur);
+
+  if (lab.mode === 'missions' && lab.target){
+    drawShape(ctx, lab.target, X, Y, COL.mint, .2, false, false, true);
+    const c = cen(lab.target);
+    tag(ctx, t('mission.target'), X(c[0]), Y(c[1]), COL.mint, 14);
+  }
+  if (lab.tool === 'flip' && lab.p.mirror){
+    const m = lab.p.mirror; ctx.save(); ctx.setLineDash([9,7]); ctx.lineWidth = 2.5; ctx.strokeStyle = '#c98a00';
+    ctx.beginPath();
+    if (m==='x'){ ctx.moveTo(0,Y(0)); ctx.lineTo(w,Y(0)); }
+    else if (m==='y'){ ctx.moveTo(X(0),0); ctx.lineTo(X(0),h); }
+    else if (m==='d1'){ ctx.moveTo(X(-R),Y(-R)); ctx.lineTo(X(R),Y(R)); }
+    else { ctx.moveTo(X(-R),Y(R)); ctx.lineTo(X(R),Y(-R)); }
+    ctx.stroke(); ctx.restore();
+  }
+  if (showImg){
+    ctx.save(); ctx.setLineDash([2,5]); ctx.strokeStyle = 'rgba(20,35,59,.4)'; ctx.lineWidth = 1.5;
+    lab.base.forEach((q,i) => { ctx.beginPath(); ctx.moveTo(X(q[0]),Y(q[1])); ctx.lineTo(X(cur[i][0]),Y(cur[i][1])); ctx.stroke(); });
+    ctx.restore();
+  }
+  drawShape(ctx, lab.base, X, Y, COL.blue, .16, true, false);
+  if (showImg) drawShape(ctx, cur, X, Y, COL.pink, .16, true, true);
+  if (lab.tool === 'turn' || lab.tool === 'resize'){
+    const c = lab.p.center === 'a' ? lab.base[0] : [0,0];
+    ctx.save(); ctx.strokeStyle = COL.ink; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(X(c[0]),Y(c[1]),8,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X(c[0])-12,Y(c[1])); ctx.lineTo(X(c[0])+12,Y(c[1])); ctx.moveTo(X(c[0]),Y(c[1])-12); ctx.lineTo(X(c[0]),Y(c[1])+12); ctx.stroke();
+    ctx.restore();
+  }
+  updateLabPanel();
+}
+
+function ruleFor(fp){
+  const tool = lab.tool, idn = isIdentity(tool, fp);
+  const cName = t('center.' + fp.center + '.s');
+  if (idn) return {alg:'(x, y) \u2192 (x, y)', words:t('words.none')};
+  if (tool === 'slide'){
+    const part = (v, s) => v === 0 ? s : s + ' ' + (v>0 ? '+' : MINUS) + ' ' + Math.abs(v);
+    const m = [];
+    if (fp.dx) m.push(t(fp.dx>0 ? 'dir.right':'dir.left', {n:Math.abs(fp.dx)}));
+    if (fp.dy) m.push(t(fp.dy>0 ? 'dir.up':'dir.down', {n:Math.abs(fp.dy)}));
+    return {alg:`(x, y) \u2192 (${part(fp.dx,'x')}, ${part(fp.dy,'y')})`, words:t('words.slide',{m:m.join(' ' + t('and') + ' ')})};
+  }
+  if (tool === 'flip'){
+    const alg = {x:'(x, \u2212y)', y:'(\u2212x, y)', d1:'(y, x)', d2:'(\u2212y, \u2212x)'}[fp.mirror];
+    return {alg:'(x, y) \u2192 ' + alg, words:t('words.flip',{line:t('line.'+fp.mirror)})};
+  }
+  if (tool === 'turn'){
+    const a = Math.round(fp.angle), n = ((a%360)+360)%360;
+    let alg = '';
+    if (fp.center === 'origin'){ const m = {90:'(\u2212y, x)',180:'(\u2212x, \u2212y)',270:'(y, \u2212x)'}[n]; if (m) alg = '(x, y) \u2192 ' + m; }
+    return {alg, words:t('words.turn',{a:Math.abs(a), dir:t(a>0?'dir.ccw':'dir.cw'), c:cName})};
+  }
+  const k = fmt(fp.scale);
+  return {alg: fp.center==='origin' ? `(x, y) \u2192 (${k}x, ${k}y)` : '', words:t('words.resize',{k, c:cName})};
+}
+function updateLabPanel(){
+  const fp = finalP(), fin = imagePts(lab.base, lab.tool, fp), r = ruleFor(fp);
+  $('#ruleAlg').textContent = r.alg || '\u00A0'; $('#ruleWords').textContent = r.words;
+  const any = changed(lab.base, fin);
+  let sc = '';
+  if (any){
+    const i = lab.base.findIndex((_,j) => dist(lab.base[j], lab.base[(j+1)%lab.base.length]) > 0);
+    const j = (i+1)%lab.base.length, k = dist(fin[i],fin[j]) / dist(lab.base[i],lab.base[j]);
+    sc = Math.abs(k-1) < 0.005 ? t('size.same') : t('size.new',{k:'\u00D7' + fmt(k)});
+  }
+  $('#sizeCheck').textContent = sc;
+  $('#vertTable').innerHTML = lab.base.map((q,i) => {
+    const f = fin[i];
+    return `<tr><td>${'ABCDEFGH'[i]}</td><td class="num">(${fmt(q[0])}, ${fmt(q[1])})</td><td class="num">${any ? `(${fmt(f[0])}, ${fmt(f[1])})` : '\u2014'}</td></tr>`;
+  }).join('');
+  $('#dxOut').textContent = fmt(fp.dx); $('#dyOut').textContent = fmt(fp.dy);
+  $('#angleOut').textContent = Math.round(fp.angle) + '\u00B0'; $('#scaleOut').textContent = '\u00D7' + fmt(fp.scale);
+  $$('#mirrorBtns .btn').forEach(b => b.setAttribute('aria-pressed', fp.mirror === b.dataset.m));
+  $$('#centerSeg button').forEach(b => b.setAttribute('aria-pressed', fp.center === b.dataset.c));
+  $('#btnAnother').disabled = !any;
+  $('#btnUndo').disabled = !any && lab.history.length === 0;
+}
+function resetParams(keepCenter){
+  for (const k in anim) delete anim[k];
+  lab.p = freshP(keepCenter ? lab.p.center : 'origin');
+  $('#dx').value = 0; $('#dy').value = 0; $('#angle').value = 0; $('#scale').value = 1;
+}
+function setTool(tool){
+  lab.tool = tool; resetParams(true);
+  $$('#toolSeg .tool').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === tool));
+  $$('.toolctl').forEach(el => el.hidden = el.dataset.for !== tool);
+  $('#centerBox').hidden = !(tool === 'turn' || tool === 'resize');
+  $('#dragHint').hidden = tool !== 'slide';
+  drawLab();
+}
+function startFree(key){
+  lab.shapeKey = key; lab.start = cp(SHAPES[key]); lab.base = cp(lab.start); lab.history = []; lab.target = null;
+  resetParams(true); $$('#shapeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.shape === key)); drawLab();
+}
+function startMission(i){
+  lab.m = i; const m = MISSIONS[i];
+  lab.start = cp(m.start); lab.base = cp(m.start); lab.history = []; lab.target = m.move(cp(m.start));
+  lab.hintOn = false; lab.result = null;
+  setTool(m.tool); renderMission();
+}
+function setMode(mode){
+  lab.mode = mode;
+  $$('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === mode));
+  $('#freeBox').hidden = mode !== 'free'; $('#missionBox').hidden = mode !== 'missions';
+  if (mode === 'missions') startMission(lab.m); else startFree(lab.shapeKey);
+}
+function renderMission(){
+  const n = lab.m + 1, tot = MISSIONS.length;
+  $('#mTitle').textContent = t('mission.h',{n, t:tot});
+  $('#mTask').textContent = t('m'+n+'.task');
+  $('#mChips').innerHTML = MISSIONS.map((_,i) => `<button type="button" class="chip${progress.missions.has(i)?' done':''}" data-i="${i}" ${i===lab.m?'aria-current="true"':''} aria-label="${esc(t('mission.h',{n:i+1,t:tot}))}">${i+1}</button>`).join('');
+  const ht = $('#mHintText'); ht.hidden = !lab.hintOn; ht.textContent = t('m'+n+'.hint');
+  const res = $('#mResult');
+  if (lab.result === true){ res.className = 'status ok-msg'; res.textContent = t('mission.ok') + ' ' + t('m'+n+'.done'); }
+  else if (lab.result === false){ res.className = 'status bad-msg'; res.textContent = t('mission.no'); }
+  else { res.className = 'status'; res.textContent = ''; }
+  const done = progress.missions.has(lab.m);
+  $('#mNext').hidden = !(done && lab.result === true);
+  if ($('#mNext').hidden === false && lab.m === MISSIONS.length-1){ $('#mNext').hidden = true; res.textContent += ' ' + t('mission.all'); }
+}
+function checkMission(){
+  settle();
+  const fin = imagePts(lab.base, lab.tool, lab.p), tg = lab.target;
+  const ok = fin.every((q,i) => Math.abs(q[0]-tg[i][0]) < .06 && Math.abs(q[1]-tg[i][1]) < .06);
+  lab.result = ok; if (ok) progress.missions.add(lab.m);
+  logEvent({event:'mission', station:'mission', stageIndex:lab.m+1, correct:ok});
+  renderMission(); drawLab();
+}
+function commitMove(){
+  settle();
+  if (isIdentity(lab.tool, lab.p)) return;
+  lab.history.push(cp(lab.base));
+  logEvent({event:'move', station:'move-' + lab.tool, stageIndex:lab.history.length, text:(ruleFor(lab.p).alg || '')});
+  lab.base = imagePts(lab.base, lab.tool, lab.p).map(q => [Math.round(q[0]*1e4)/1e4, Math.round(q[1]*1e4)/1e4]);
+  resetParams(true); lab.result = null; if (lab.mode === 'missions') renderMission(); drawLab();
+}
+function bindLab(){
+  $$('#modeSeg button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  $$('#shapeSeg button').forEach(b => b.addEventListener('click', () => startFree(b.dataset.shape)));
+  $$('#toolSeg .tool').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+  $$('#centerSeg button').forEach(b => b.addEventListener('click', () => { lab.p.center = b.dataset.c; drawLab(); }));
+  const slider = (id, key, used) => $('#'+id).addEventListener('input', e => { delete anim[key]; lab.p[key] = +e.target.value; if (lab.p[key] !== (key==='scale'?1:0)) mark(used); drawLab(); });
+  slider('dx','dx','slide'); slider('dy','dy','slide'); slider('angle','angle','turn'); slider('scale','scale','resize');
+  $$('#mirrorBtns .btn').forEach(b => b.addEventListener('click', () => { lab.p.mirror = b.dataset.m; lab.p.reflT = 0; mark('flip'); animateTo('reflT', 1, 700); }));
+  $$('[data-q]').forEach(b => b.addEventListener('click', () => { const v = +b.dataset.q; $('#angle').value = v; mark('turn'); animateTo('angle', v, 700); }));
+  $$('[data-k]').forEach(b => b.addEventListener('click', () => { const v = +b.dataset.k; $('#scale').value = v; mark('resize'); animateTo('scale', v, 600); }));
+  $('#btnAnother').addEventListener('click', commitMove);
+  $('#btnUndo').addEventListener('click', () => {
+    settle();
+    if (!isIdentity(lab.tool, lab.p)) resetParams(true);
+    else if (lab.history.length){ lab.base = lab.history.pop(); resetParams(true); }
+    lab.result = null; if (lab.mode === 'missions') renderMission(); drawLab();
+  });
+  $('#btnRestart').addEventListener('click', () => { lab.base = cp(lab.start); lab.history = []; resetParams(true); lab.result = null; if (lab.mode==='missions') renderMission(); drawLab(); });
+  $('#labSnap').addEventListener('click', () => { addSnap($('#labCanvas'), ruleFor(finalP()).alg || t('tool.'+lab.tool)); });
+  $('#mCheck').addEventListener('click', checkMission);
+  $('#mHint').addEventListener('click', () => { lab.hintOn = !lab.hintOn; renderMission(); });
+  $('#mNext').addEventListener('click', () => startMission(Math.min(MISSIONS.length-1, lab.m+1)));
+  $('#mChips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) startMission(+b.dataset.i); });
+
+  // drag to slide
+  const cv = $('#labCanvas'); let drag = null;
+  const world = e => { const r = cv.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*20-10, 10-(e.clientY-r.top)/r.height*20]; };
+  cv.addEventListener('pointerdown', e => {
+    if (lab.tool !== 'slide') return;
+    cv.setPointerCapture(e.pointerId); drag = {w:world(e), dx:lab.p.dx, dy:lab.p.dy}; cv.style.cursor = 'grabbing';
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const w = world(e), cl = v => Math.max(-12, Math.min(12, v));
+    lab.p.dx = cl(drag.dx + Math.round(w[0]-drag.w[0])); lab.p.dy = cl(drag.dy + Math.round(w[1]-drag.w[1]));
+    $('#dx').value = lab.p.dx; $('#dy').value = lab.p.dy;
+    if (lab.p.dx || lab.p.dy) mark('slide');
+    drawLab();
+  });
+  const end = () => { drag = null; cv.style.cursor = ''; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+}
+
+/* ============================================================
+   STATION 3: Sort pairs
+   ============================================================ */
+const BASE = {
+  tri:[[0,0],[4,0],[0,3]], rect:[[0,0],[4,0],[4,2],[0,2]], sq:[[0,0],[3,0],[3,3],[0,3]],
+  L:[[0,0],[3,0],[3,1],[1,1],[1,3],[0,3]], flag:[[0,0],[0,4],[3,3],[1,2.2],[1,0]],
+};
+function T(pts, o){
+  o = Object.assign({sx:1, sy:1, flip:false, rot:0}, o);
+  const a = rad(o.rot), cs = Math.cos(a), sn = Math.sin(a);
+  return pts.map(([x,y]) => { if (o.flip) x = -x; x *= o.sx; y *= o.sy; return [x*cs - y*sn, x*sn + y*cs]; });
+}
+const PAIRS = [
+  {a:BASE.tri,  b:T(BASE.tri,{rot:90}),            ans:'congruent'},
+  {a:BASE.rect, b:T(BASE.rect,{sx:2,sy:2}),        ans:'similar'},
+  {a:BASE.rect, b:[[0,0],[4,0],[4,3],[0,3]],       ans:'not'},
+  {a:BASE.sq,   b:T(BASE.sq,{sx:5/3,sy:5/3}),      ans:'similar'},
+  {a:BASE.L,    b:T(BASE.L,{flip:true}),           ans:'congruent'},
+  {a:BASE.tri,  b:T(BASE.tri,{sx:2,sy:2,rot:-90}), ans:'similar'},
+  {a:BASE.tri,  b:T(BASE.tri,{sx:2,sy:1}),         ans:'not'},
+  {a:BASE.flag, b:T(BASE.flag,{rot:180}),          ans:'congruent'},
+];
+const sort = {order:[], i:0, score:0, firstTry:true, answered:false, done:false, measure:false, fb:null, tried:null};
+function shuffle(a){ a = a.slice(); for (let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+function startSort(){ Object.assign(sort, {order:shuffle(PAIRS.map((_,i)=>i)), i:0, score:0, firstTry:true, answered:false, done:false, fb:null, tried:new Set()}); }
+function pairSVGs(pair, measure){
+  const bb = pts => { const xs = pts.map(p=>p[0]), ys = pts.map(p=>p[1]); return {minx:Math.min(...xs), miny:Math.min(...ys), w:Math.max(...xs)-Math.min(...xs), h:Math.max(...ys)-Math.min(...ys)}; };
+  const A = bb(pair.a), B = bb(pair.b), s = 160 / Math.max(A.w, A.h, B.w, B.h);
+  const one = (pts, color, soft) => {
+    const b = bb(pts), ox = (220-b.w*s)/2 - b.minx*s, oy = (220+b.h*s)/2 + b.miny*s;
+    const P = pts.map(([x,y]) => [ox+x*s, oy-y*s]);
+    let out = `<polygon points="${P.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="${soft}" stroke="${color}" stroke-width="4" stroke-linejoin="round"/>`;
+    if (measure){
+      const c = cen(P);
+      P.forEach((p,i) => {
+        const q = P[(i+1)%P.length], len = dist(pts[i], pts[(i+1)%pts.length]);
+        const mx = (p[0]+q[0])/2, my = (p[1]+q[1])/2; let dx = mx-c[0], dy = my-c[1]; const m = Math.hypot(dx,dy)||1;
+        out += `<text x="${(mx+dx/m*15).toFixed(1)}" y="${(my+dy/m*15).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-family="Lexend,sans-serif" font-size="14" font-weight="600" fill="${color}" stroke="#fff" stroke-width="4" paint-order="stroke">${fmt(len,1)}</text>`;
+      });
+    }
+    return `<svg viewBox="0 0 220 220" role="img" aria-label="shape">${out}</svg>`;
+  };
+  return [one(pair.a, COL.blue, '#DDE6FF'), one(pair.b, COL.pink, '#FFE1EF')];
+}
+function renderSort(){
+  const box = $('#sortBox'); if (!sort.order.length) startSort();
+  const tot = PAIRS.length;
+  if (sort.done){
+    box.innerHTML = `<div class="verdict v-congruent panel" style="box-shadow:none"><p class="big">${esc(t('sort.done',{s:sort.score, n:tot}))}</p></div><div class="row"><button class="btn primary" id="sortAgain">${esc(t('sort.again'))}</button></div>`;
+    $('#sortAgain').addEventListener('click', () => { startSort(); renderSort(); });
+    return;
+  }
+  const idx = sort.order[sort.i], pair = PAIRS[idx], [sa, sb] = pairSVGs(pair, sort.measure);
+  const btn = k => {
+    let cls = 'btn';
+    if (sort.answered && k === pair.ans) cls += ' right';
+    else if (sort.tried.has(k) && k !== pair.ans) cls += ' wrong';
+    return `<button class="${cls}" data-a="${k}" ${sort.answered?'disabled':''}>${esc(t(k==='not'?'sort.neither':'v.'+k))}</button>`;
+  };
+  box.innerHTML = `
+    <div class="meter" aria-hidden="true"><i style="width:${(sort.i/tot*100).toFixed(0)}%"></i></div>
+    <p class="hint" style="margin-bottom:0">${esc(t('sort.q',{n:sort.i+1, t:tot}))}</p>
+    <div class="pair"><div class="fig">${sa}</div><div class="fig">${sb}</div></div>
+    <div class="answers">${btn('congruent')}${btn('similar')}${btn('not')}
+      <button class="btn" id="measureBtn" aria-pressed="${sort.measure}">${esc(t(sort.measure?'sort.hide':'sort.measure'))}</button></div>
+    <p class="status ${sort.answered?'ok-msg':'bad-msg'}" role="status" id="sortFb">${sort.fb ? esc(sort.fb) : ''}</p>
+    ${sort.answered ? `<button class="btn primary" id="sortNext">${esc(t('sort.next'))}</button>` : ''}`;
+  $$('#sortBox [data-a]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.a;
+    logEvent({event:'answer', station:'sort', stageIndex:idx+1, correct:k === pair.ans});
+    if (k === pair.ans){ sort.answered = true; if (sort.firstTry) sort.score++; sort.fb = t('sort.right') + ' ' + t('p'+(idx+1)+'.why'); }
+    else { sort.firstTry = false; sort.tried.add(k); sort.fb = t('sort.wrong'); }
+    renderSort();
+  }));
+  $('#measureBtn').addEventListener('click', () => { sort.measure = !sort.measure; renderSort(); });
+  const nx = $('#sortNext');
+  if (nx) nx.addEventListener('click', () => {
+    sort.i++; sort.firstTry = true; sort.answered = false; sort.fb = null; sort.tried = new Set();
+    if (sort.i >= tot){ sort.done = true; progress.sortScore = sort.score; logEvent({event:'sort-complete', station:'sort', stageIndex:tot, stars:sort.score}); }
+    renderSort();
+  });
+}
+STR.en['sort.neither'] = "Neither"; STR.es['sort.neither'] = "Ninguno";
+
+/* ============================================================
+   STATION 4: Recap + writing
+   ============================================================ */
+function mini(base, img, mirror){
+  const all = base.concat(img), xs = all.map(p=>p[0]), ys = all.map(p=>p[1]);
+  const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys), W = 200, H = 130, pad = .8;
+  const s = Math.min(W/(maxx-minx+2*pad), H/(maxy-miny+2*pad));
+  const ox = (W-(maxx-minx)*s)/2 - minx*s, oy = (H+(maxy-miny)*s)/2 + miny*s;
+  const P = pts => pts.map(([x,y]) => (ox+x*s).toFixed(1)+','+(oy-y*s).toFixed(1)).join(' ');
+  let extra = '';
+  if (mirror) extra = `<line x1="${ox}" y1="${oy-(maxy+pad)*s}" x2="${ox}" y2="${oy-(miny-pad)*s}" stroke="#c98a00" stroke-width="2" stroke-dasharray="6 5"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${extra}<polygon points="${P(base)}" fill="#DDE6FF" stroke="${COL.blue}" stroke-width="3" stroke-linejoin="round"/><polygon points="${P(img)}" fill="#FFE1EF" stroke="${COL.pink}" stroke-width="3" stroke-linejoin="round"/></svg>`;
+}
+function renderIdeas(){
+  const L = SHAPES.l;
+  const items = [
+    ['slide', mini(L, L.map(([x,y]) => [x+5,y]))],
+    ['flip', mini(L, L.map(([x,y]) => [-x,y]), true)],
+    ['turn', mini(L, L.map(([x,y]) => [-y,x]))],
+    ['resize', mini(L, L.map(([x,y]) => [2*x,2*y]))],
+  ];
+  $('#ideas').innerHTML = items.map(([k,svg]) => `<div class="idea">${svg}
+    <h3>${esc(t('tool.'+k))} <span style="font-weight:400;color:var(--ink-soft)">(${esc(t('tool.'+k+'.t'))})</span></h3>
+    <dl><dt>${esc(t('idea.changes'))}</dt><dd>${esc(t('idea.'+k+'.c'))}</dd>
+    <dt>${esc(t('idea.same'))}</dt><dd>${esc(t('idea.'+k+'.s'))}</dd>
+    <dt>${esc(t('idea.result'))}</dt><dd>${esc(t('idea.'+k+'.r'))}</dd></dl></div>`).join('');
+}
+function renderDisc(){
+  const rows = [
+    [progress.twinC, t('disc.c')], [progress.twinS, t('disc.s')], [progress.twinN, t('disc.n')],
+    [progress.slide, t('disc.slide')], [progress.flip, t('disc.flip')], [progress.turn, t('disc.turn')], [progress.resize, t('disc.resize')],
+    [progress.missions.size === MISSIONS.length, t('disc.missions',{n:progress.missions.size, t:MISSIONS.length})],
+    [progress.sortScore !== null, progress.sortScore !== null ? t('disc.sort',{s:progress.sortScore, n:progress.sortTotal}) : t('disc.sort0')],
+  ];
+  $('#discList').innerHTML = rows.map(([d,txt]) => checkItem(d, txt)).join('');
+}
+function renderSnaps(){
+  const box = $('#snaps');
+  if (!snaps.length){ box.innerHTML = `<p class="hint">${esc(t('snaps.empty'))}</p>`; return; }
+  box.innerHTML = snaps.map((s,i) => `<div class="snap"><img src="${s.src}" alt="${esc(s.cap)}">
+    <input type="text" data-i="${i}" value="${esc(s.cap)}" aria-label="${esc(t('snaps.cap'))}" placeholder="${esc(t('snaps.cap'))}">
+    <button class="btn" data-rm="${i}">${esc(t('snaps.remove'))}</button></div>`).join('');
+  $$('#snaps input').forEach(inp => inp.addEventListener('input', () => { snaps[+inp.dataset.i].cap = inp.value; }));
+  $$('#snaps [data-rm]').forEach(b => b.addEventListener('click', () => { snaps.splice(+b.dataset.rm, 1); renderSnaps(); }));
+}
+
+/* ---- writing ---- */
+const WORDS = {slide:['slide','deslizar'], flip:['flip','voltear'], turn:['turn','girar'], resize:['resize','cambiar tama\u00F1o'], size:['size','tama\u00F1o'], shape:['shape','forma']};
+const L1 = [
+  {pre:"A ", post:" moves a shape without turning or flipping it.", ans:'slide', es:"Una traslaci\u00F3n mueve una figura sin girarla ni voltearla."},
+  {pre:"A ", post:" makes a mirror image of a shape.", ans:'flip', es:"Una reflexi\u00F3n hace una imagen en espejo de una figura."},
+  {pre:"A ", post:" spins a shape around a point.", ans:'turn', es:"Una rotaci\u00F3n hace girar una figura alrededor de un punto."},
+  {pre:"A ", post:" makes a shape bigger or smaller.", ans:'resize', es:"Una dilataci\u00F3n hace una figura m\u00E1s grande o m\u00E1s peque\u00F1a."},
+  {pre:"Congruent shapes have the same ", post:" and the same shape.", ans:'size', es:"Las figuras congruentes tienen el mismo ___ y la misma forma."},
+  {pre:"Similar shapes have the same ", post:", but they can have different sizes.", ans:'shape', es:"Las figuras semejantes tienen la misma ___, pero pueden tener tama\u00F1os diferentes."},
+];
+const L2 = [
+  ["A slide moves a shape","Una traslaci\u00F3n mueve una figura"],
+  ["A flip makes a shape","Una reflexi\u00F3n hace que una figura"],
+  ["A turn moves a shape","Una rotaci\u00F3n mueve una figura"],
+  ["Congruent shapes are","Las figuras congruentes son"],
+  ["Similar shapes are","Las figuras semejantes son"],
+  ["In the lab, I saw that","En el laboratorio, vi que"],
+];
+const L3 = [
+  ["In the lab, I tried","En el laboratorio, prob\u00E9"],
+  ["I noticed that","Not\u00E9 que"],
+  ["For example,","Por ejemplo,"],
+  ["The difference between congruent and similar shapes is","La diferencia entre figuras congruentes y semejantes es"],
+  ["One thing I still wonder is","Algo que todav\u00EDa me pregunto es"],
+];
+const VOCAB = [
+  ['congruent',/congruen/i],['similar',/similar|semejan/i],['slide / translation',/\bslide|translation/i],['flip / reflection',/\bflip|reflection|mirror/i],
+  ['turn / rotation',/\bturn|rotation|rotate/i],['resize / dilation',/resiz|dilation|dilate/i],['scale factor',/scale factor/i],['vertex',/vert(ex|ices)/i],
+  ['angle',/\bangle/i],['size',/\bsize/i],['shape',/\bshape/i],['image',/\bimage/i],['coordinates',/coordinate/i],
+];
+const writing = {name:'', period:'', level:1, l1:Array(L1.length).fill(''), l2:Array(L2.length).fill(''), l3:Array(L3.length).fill(''), l4:''};
+const KEY = 'shapelab-writing-v1';
+function loadW(){ try { const j = JSON.parse(localStorage.getItem(KEY) || 'null'); if (j) Object.assign(writing, j); } catch(e){} }
+function saveW(){ try { localStorage.setItem(KEY, JSON.stringify(writing)); } catch(e){} }
+const esHint = s => lang === 'es' ? `<p class="hint es" lang="es">${esc(s)}</p>` : '';
+function renderLevels(){
+  $('#levelSeg').innerHTML = [1,2,3,4].map(n => `<button type="button" data-l="${n}" aria-pressed="${writing.level===n}">${esc(t('lvl'+n))}</button>`).join('');
+  $$('#levelSeg button').forEach(b => b.addEventListener('click', () => { writing.level = +b.dataset.l; saveW(); renderLevels(); renderWrite(); }));
+}
+function renderWrite(){
+  const A = $('#writeArea'), lv = writing.level; let h = `<p style="margin-top:12px">${esc(t('l'+lv+'.p'))}</p>`;
+  if (lv === 1){
+    h += `<div class="bank">${Object.keys(WORDS).map(k => `<span>${esc(WORDS[k][0])} <small>${esc(WORDS[k][1])}</small></span>`).join('')}</div>`;
+    L1.forEach((s,i) => {
+      h += `<div class="frame">${esc(s.pre)}<select data-i="${i}" aria-label="${i+1}"><option value="">${esc(t('write.choose'))}</option>${Object.keys(WORDS).map(k => `<option value="${k}">${esc(WORDS[k][0])}</option>`).join('')}</select>${esc(s.post)}${esHint(s.es)}</div>`;
+    });
+    h += `<div class="row"><button class="btn good" id="l1Check">${esc(t('write.check'))}</button></div><p class="status" id="l1Res" role="status"></p>`;
+  } else if (lv === 2 || lv === 3){
+    const arr = lv === 2 ? L2 : L3;
+    arr.forEach((f,i) => {
+      h += `<div class="frame"><label for="f${i}"><b>${esc(f[0])}</b></label>${esHint(f[1])}${lv===2 ? `<input type="text" id="f${i}" data-i="${i}" autocomplete="off">` : `<textarea id="f${i}" data-i="${i}" rows="2"></textarea>`}</div>`;
+    });
+  } else {
+    h += `<textarea class="free" id="freeText" rows="9" aria-label="${esc(t('l4.p'))}"></textarea>
+      <p class="hint" id="wc"></p><span class="lbl" style="margin-top:8px">${esc(t('write.vocab'))}</span><div class="vocab" id="vocab"></div>`;
+  }
+  A.innerHTML = h;
+  if (lv === 1){
+    $$('#writeArea select').forEach(sel => { sel.value = writing.l1[+sel.dataset.i] || ''; sel.addEventListener('change', () => { writing.l1[+sel.dataset.i] = sel.value; sel.className = ''; saveW(); }); });
+    $('#l1Check').addEventListener('click', () => {
+      let n = 0;
+      $$('#writeArea select').forEach(sel => { const ok = sel.value === L1[+sel.dataset.i].ans; if (ok) n++; sel.className = sel.value ? (ok ? 'ok' : 'bad') : ''; });
+      logEvent({event:'check', station:'write-level-1', stageIndex:L1.length, correct:n === L1.length, stars:n});
+      $('#l1Res').className = 'status ' + (n === L1.length ? 'ok-msg' : ''); $('#l1Res').textContent = t('write.score',{n, t:L1.length});
+    });
+  } else if (lv === 2 || lv === 3){
+    const key = lv === 2 ? 'l2' : 'l3';
+    $$('#writeArea [data-i]').forEach(el => { el.value = writing[key][+el.dataset.i] || ''; el.addEventListener('input', () => { writing[key][+el.dataset.i] = el.value; saveW(); }); });
+  } else {
+    const ta = $('#freeText'); ta.value = writing.l4;
+    const upd = () => {
+      const words = ta.value.trim().split(/\s+/).filter(Boolean).length;
+      $('#wc').textContent = t('write.words',{n:words});
+      $('#vocab').innerHTML = VOCAB.map(([n,re]) => `<span class="${re.test(ta.value)?'on':''}">${esc(n)}</span>`).join('');
+    };
+    ta.addEventListener('input', () => { writing.l4 = ta.value; saveW(); upd(); }); upd();
+  }
+}
+function writingText(){
+  const lv = writing.level, blank = '_____';
+  let lines = [];
+  if (lv === 1) L1.forEach((s,i) => lines.push(s.pre + (writing.l1[i] ? WORDS[writing.l1[i]][0] : blank) + s.post));
+  else if (lv === 2) L2.forEach((f,i) => lines.push(f[0] + ' ' + (writing.l2[i] || blank)));
+  else if (lv === 3) L3.forEach((f,i) => lines.push(f[0] + ' ' + (writing.l3[i] || blank)));
+  else lines.push(writing.l4);
+  return lines.join(lv === 4 ? '\n' : '\n');
+}
+function fullText(){
+  const head = [t('write.title')]; if (writing.name) head.push(writing.name);
+  let out = head.join('\n') + '\n\n' + writingText();
+  const caps = snaps.map(s => s.cap).filter(Boolean);
+  if (caps.length) out += '\n\n' + caps.map((c,i) => `[${i+1}] ${c}`).join('\n');
+  return out;
+}
+function copyText(txt){
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt);
+  return new Promise(res => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e){} ta.remove(); res(); });
+}
+function logWriting(action){
+  const txt = writingText();
+  logEvent({event:'writing-' + action, station:'write-level-' + writing.level, stageIndex:writing.level, text:txt, wordCount:txt.replace(/_+/g,' ').trim().split(/\s+/).filter(Boolean).length});
+}
+function bindWrite(){
+  $('#wName').addEventListener('input', e => { writing.name = e.target.value; $('#gName').value = e.target.value; saveW(); });
+  $('#gName').addEventListener('input', e => { writing.name = e.target.value; $('#wName').value = e.target.value; saveW(); });
+  $('#gPeriod').addEventListener('input', e => { writing.period = e.target.value; saveW(); });
+  $('#wCopy').addEventListener('click', () => { logWriting('copy'); copyText(fullText()).then(() => toast(t('write.copied'))).catch(() => {}); });
+  $('#wDown').addEventListener('click', () => {
+    logWriting('download');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([fullText()], {type:'text/plain'}));
+    a.download = 'shape-lab-writing.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  $('#wPrint').addEventListener('click', () => {
+    logWriting('print');
+    const ps = $('#printSheet');
+    ps.innerHTML = `<h1>${esc(t('write.title'))}</h1><p><b>${esc(writing.name)}</b> &nbsp; ${esc(new Date().toLocaleDateString())}</p>
+      ${snaps.length ? `<div class="ps-snaps">${snaps.map(s => `<figure style="margin:0"><img src="${s.src}" alt=""><figcaption>${esc(s.cap)}</figcaption></figure>`).join('')}</div>` : ''}
+      <p>${esc(writingText())}</p>`;
+    window.print();
+  });
+  $('#wClear').addEventListener('click', () => {
+    Object.assign(writing, {name:'', l1:Array(L1.length).fill(''), l2:Array(L2.length).fill(''), l3:Array(L3.length).fill(''), l4:''});
+    snaps.length = 0; saveW(); $('#wName').value = ''; $('#gName').value = ''; hasLoggedStart = false; renderWrite(); renderSnaps(); toast(t('write.cleared'));
+  });
+}
+function renderRecap(){ renderDisc(); renderIdeas(); renderSnaps(); renderLevels(); renderWrite(); $('#wName').value = writing.name; }
+
+function renderWall(){
+  $('#wallList').innerHTML = WALL.map(w => `<div><dt>${esc(w[0])} <em>/ ${esc(w[1])}</em></dt><dd>${esc(w[2])}</dd><dd class="es" lang="es">${esc(w[3])}</dd></div>`).join('');
+}
+
+/* ============================================================
+   App shell
+   ============================================================ */
+let current = 'twins';
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.title = t('app.title');
+  $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  $$('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
+  $$('#langSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
+  if (lab.mode === 'missions') renderMission();
+  renderWall(); drawTwins(); drawLab();
+  if (current === 'sort') renderSort();
+  if (current === 'recap') renderRecap();
+}
+function showTab(id){
+  current = id;
+  $$('[role=tab]').forEach(b => { const on = b.dataset.tab === id; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
+  $$('main > section').forEach(s => s.hidden = s.id !== 'tab-' + id);
+  requestAnimationFrame(() => {
+    if (id === 'twins') drawTwins();
+    if (id === 'move') drawLab();
+    if (id === 'sort') renderSort();
+    if (id === 'recap') renderRecap();
+  });
+}
+function init(){
+  loadW();
+  $$('#langSeg button').forEach(b => b.addEventListener('click', () => { lang = b.dataset.lang; applyLang(); }));
+  const tabs = $$('[role=tab]');
+  tabs.forEach((b,i) => {
+    b.addEventListener('click', () => showTab(b.dataset.tab));
+    b.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+        const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length]; n.focus(); showTab(n.dataset.tab);
+      }
+    });
+  });
+  $('#gName').value = writing.name || ''; $('#gPeriod').value = writing.period || '';
+  bindTwins(); bindLab(); bindWrite(); startSort();
+  if (window.ResizeObserver){
+    const ro = new ResizeObserver(() => { if (current === 'twins') drawTwins(); if (current === 'move') drawLab(); });
+    ro.observe($('#twinCanvas')); ro.observe($('#labCanvas'));
+  }
+  setTool('slide');
+  applyLang();
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawTwins(); drawLab(); });
+init();
+})();
+</script>
+</body>
+</html>
